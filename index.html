@@ -562,6 +562,30 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   })();
 
   /* load a picture for cropping: sharpest version first, CORS-clean when the server allows it */
+
+  /* share a picture with the phone's share menu */
+  function sharePicture(o,name,btn){
+    var label=btn.textContent; btn.disabled=true; btn.textContent='...';
+    function done(msg){ btn.disabled=false; btn.textContent=msg||label; if(msg) setTimeout(function(){ btn.textContent=label; },2500); }
+    function download(blob){
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name.replace(/[^\w\- ]+/g,'')+'.jpg';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); done('Saved');
+    }
+    srcOf(o).then(function(src){
+      if(!src){ done('No picture'); return; }
+      var getBlob=/^data:/.test(src)?fetch(src).then(function(r){return r.blob()}):fetch(src,{mode:'cors'}).then(function(r){ if(!r.ok) throw 0; return r.blob(); });
+      getBlob.then(function(blob){
+        var ext=(blob.type.split('/')[1]||'jpeg').replace('jpeg','jpg');
+        var file=new File([blob],name.replace(/[^\w\- ]+/g,'')+'.'+ext,{type:blob.type||'image/jpeg'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          navigator.share({files:[file],title:name}).then(function(){done()},function(){done()});
+        } else download(blob);
+      },function(){
+        if(navigator.share && !/^data:/.test(src)) navigator.share({title:name,url:src}).then(function(){done()},function(){done()});
+        else done('Not possible');
+      });
+    });
+  }
   function loadForCrop(o){
     return srcOf(o).then(function(src){
       if(!src) return null;
@@ -711,7 +735,9 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       var target=targets[i];
       function ask(){
         act.textContent=''; act.className='gact';
-        act.appendChild(h('button',{class:'btn quiet sm',type:'button',on:{click:function(){ cropPicture(target,again); }}},'Crop'));
+        var shb=h('button',{class:'btn quiet sm',type:'button'},'Share');
+        shb.addEventListener('click',function(){ sharePicture(it.pic,name,shb); });
+        act.appendChild(shb);
         var rm=h('button',{class:'btn quiet sm',type:'button'},'Remove');
         rm.addEventListener('click',function(){
           act.textContent=''; act.className='gact stack';
