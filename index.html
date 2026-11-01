@@ -434,7 +434,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       box.appendChild(h('button',{class:'chip',type:'button','aria-pressed':String(state.taxon===val),on:{click:function(){state.taxon=val;state.limit=60;render()}}},tx?catIcon(tx):null,label));
     }
     chip('all','All');
-    if(Object.keys(favs).some(function(k){ return obs.some(function(o){return key(o)===k}); })) chip('fav','\u2605 Favorites');
     Object.keys(seen).sort(function(a,b){return seen[b]-seen[a]}).forEach(function(t){chip(t,TAXA[t]||t,t)});
   }
   function groups(){
@@ -483,7 +482,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     rows.forEach(function(g){
       var nm=g.common||g.sci||'', L=nm.charAt(0).toUpperCase(); if(!/[A-Z]/.test(L)) L='#';
       if(!grid && useLetters && L!==last){ last=L; ul.appendChild(h('li',{class:'letter','aria-hidden':'true'},L)); }
-      var n=g.n, cv=coverOf(g.key), tx=taxonOf(g.key), label=(favs[g.key]?'\u2605 ':'')+nm;
+      var n=g.n, cv=coverOf(g.key), tx=taxonOf(g.key), label=nm;
       var ptxt=n?n+(n===1?' picture':' pictures'):'No pictures';
       if(grid){
         ul.appendChild(h('li',null,h('button',{class:'card',type:'button',on:{click:function(){go(g.key)}}},
@@ -522,6 +521,30 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     return sp;
   }
   function taxonOf(k){ var f=obs.filter(function(o){return key(o)===k && o.taxon})[0]; return f?f.taxon:''; }
+
+  /* delete a whole animal with its pictures, videos, notes and name */
+  function askDeleteAnimal(k,name){
+    var p=$('#panel'); p.textContent='';
+    var pc=pictures(k).length, vc=videos.filter(function(x){return x.key===k}).length;
+    p.appendChild(h('h2',null,'Delete '+name+'?'));
+    p.appendChild(h('p',{class:'note'},'This removes the animal with its '+pc+(pc===1?' picture':' pictures')+(vc?', '+vc+(vc===1?' video':' videos'):'')+', its notes and its name. It cannot be undone. Make a backup first if you are not sure.'));
+    p.appendChild(h('div',{class:'btnrow'},
+      h('button',{class:'btn danger',type:'button',on:{click:function(){ deleteAnimal(k,name); }}},'Yes, delete it'),
+      h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Keep it')));
+    openSheet();
+  }
+  function deleteAnimal(k,name){
+    var gone=obs.filter(function(o){return key(o)===k}), ex=extras.filter(function(x){return x.key===k}), vs=videos.filter(function(x){return x.key===k});
+    var drops=[];
+    gone.forEach(function(o){ if(o.hasPhoto){ drops.push(drop('photo:'+o.id)); photoCache[o.id]=null; } });
+    ex.forEach(function(x){ drops.push(drop('photo:'+x.id)); photoCache[x.id]=null; });
+    vs.forEach(function(x){ drops.push(drop('video:'+x.id)); if(vidUrl[x.id]){ URL.revokeObjectURL(vidUrl[x.id]); delete vidUrl[x.id]; } });
+    obs=obs.filter(function(o){return key(o)!==k}); extras=extras.filter(function(x){return x.key!==k}); videos=videos.filter(function(x){return x.key!==k});
+    delete names[k]; delete notes[k]; delete covers[k]; delete favs[k];
+    Promise.all(drops).then(function(){ return Promise.all([saveObs(),saveExtras(),saveNames(),saveNotes(),saveCovers(),saveFavs(),saveVideos()]); }).then(function(){
+      closeSheet(); state.sp=null; if(location.hash&&location.hash!=='#') location.hash=''; render(); window.scrollTo(0,0); say(name+' deleted.');
+    });
+  }
   function nameOf(k){ var f=obs.filter(function(o){return key(o)===k})[0]; return names[k]||(f&&(f.common||f.sci))||k; }
 
   /* first page: backup reminder, small stats and the animal of the day */
@@ -951,9 +974,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
           put('video:'+id,f).then(function(){ videos.push({id:id,key:k,date:today(),size:f.size,type:f.type||'video/mp4'}); return saveVideos(); }).then(function(){ render(); });
         });
       }}},'Add video'),
-      h('button',{class:'btn'+(favs[k]?' solid':''),type:'button','aria-pressed':String(!!favs[k]),on:{click:function(){
-        if(favs[k]) delete favs[k]; else favs[k]=1; saveFavs().then(function(){ render(); });
-      }}},favs[k]?'\u2605 Favorite':'\u2606 Favorite'),
+      h('button',{class:'btn danger',type:'button',on:{click:function(){ askDeleteAnimal(k,name); }}},'Delete'),
       h('button',{class:'btn',type:'button',on:{click:function(){ openRename(k,name); }}},'Rename'),
       h('a',{class:'btn',style:'text-decoration:none',href:'#',target:'_blank',rel:'noopener noreferrer',on:{click:function(e){
         var q='Tell me about this animal from Costa Rica: '+name+(sci&&sci!==name?' ('+sci+')':'')+'. How do I recognise it, what does it eat, where does it live, and is it common near Uvita? I can attach a photo if you want to check the identification.';
