@@ -115,12 +115,6 @@ h1{font-family:var(--sans); font-weight:700; font-size:14px; line-height:1.2; le
 .goal{display:flex; flex-direction:column; gap:8px}
 .bar{height:8px; background:var(--line)}
 .bar i{display:block; height:100%; background:var(--gold)}
-.badge{display:flex; gap:14px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)}
-.badge.off{opacity:.45}
-.badge .mark{width:30px; height:30px; flex:none; border:1px solid var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:700}
-.badge.on .mark{background:var(--gold); color:#FAF7F2}
-.badge b{display:block; font-size:13px; letter-spacing:.1em; text-transform:uppercase}
-.badge span.d{font-family:var(--serif); font-style:italic; color:var(--muted)}
 .ph{
   position:relative; aspect-ratio:4/5; width:100%; max-width:100%; overflow:hidden;
   background:var(--icon) center/58% no-repeat, #FBF2E9; box-shadow:inset 0 0 0 1px var(--line);
@@ -530,46 +524,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   function taxonOf(k){ var f=obs.filter(function(o){return key(o)===k && o.taxon})[0]; return f?f.taxon:''; }
   function nameOf(k){ var f=obs.filter(function(o){return key(o)===k})[0]; return names[k]||(f&&(f.common||f.sci))||k; }
 
-  function badgeList(){
-    var keys={}; obs.forEach(function(o){ keys[key(o)]=1; });
-    var ks=Object.keys(keys), c={}, tot=0;
-    ks.forEach(function(k){ var t=taxonOf(k)||'other'; c[t]=(c[t]||0)+1; tot+=pictures(k).length; });
-    var own=extras.length+obs.filter(function(o){return o.hasPhoto}).length, n=ks.length;
-    function b(t,d,ok){ return {title:t,desc:d,done:!!ok}; }
-    return [
-      b('First bird','Add your first bird',(c.Aves||0)>=1),
-      b('10 birds','10 different birds',(c.Aves||0)>=10),
-      b('25 birds','25 different birds',(c.Aves||0)>=25),
-      b('First insect','Add your first insect',(c.Insecta||0)>=1),
-      b('10 insects','10 different insects',(c.Insecta||0)>=10),
-      b('First mammal','Add your first mammal',(c.Mammalia||0)>=1),
-      b('First reptile','Add your first reptile',(c.Reptilia||0)>=1),
-      b('First amphibian','Add your first frog or amphibian',(c.Amphibia||0)>=1),
-      b('First arachnid','Add your first spider or scorpion',(c.Arachnida||0)>=1),
-      b('10 animals','10 different animals',n>=10),
-      b('25 animals','25 different animals',n>=25),
-      b('50 animals','50 different animals',n>=50),
-      b('100 animals','100 different animals',n>=100),
-      b('50 pictures','50 pictures in your journal',tot>=50),
-      b('100 pictures','100 pictures in your journal',tot>=100),
-      b('Your own photo','Add a picture of your own',own>=1),
-      b('5 favorites','Mark 5 favorites',Object.keys(favs).length>=5),
-      b('First video','Add a video',videos.length>=1)
-    ];
-  }
-  function openBadges(){
-    var p=$('#panel'); p.textContent='';
-    var list=badgeList(), got=list.filter(function(x){return x.done}).length;
-    p.appendChild(h('h2',null,'Badges'));
-    p.appendChild(h('p',{class:'note'},got+' of '+list.length+' earned'));
-    list.forEach(function(x){
-      p.appendChild(h('div',{class:'badge '+(x.done?'on':'off')},
-        h('span',{class:'mark','aria-hidden':'true'},x.done?'\u2713':''),
-        h('span',null,h('b',null,x.title),h('span',{class:'d'},x.desc))));
-    });
-    p.appendChild(h('div',{class:'btnrow center'},h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Close')));
-    openSheet();
-  }
   /* first page: backup reminder, small stats and the animal of the day */
   function renderHome(v){
     var box=h('div',{class:'home'});
@@ -584,8 +538,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     box.appendChild(h('div',{class:'goal'},
       h('p',{class:'stats'},ks.length+' of '+goal+' animals'),
       h('div',{class:'bar',role:'img','aria-label':ks.length+' of '+goal+' animals'},h('i',{style:'width:'+Math.min(100,Math.round(ks.length/goal*100))+'%'}))));
-    var bl=badgeList();
-    box.appendChild(h('button',{class:'btn',type:'button',on:{click:openBadges}},'\u2605 Badges: '+bl.filter(function(x){return x.done}).length+' of '+bl.length));
     if(withCover.length){
       withCover.sort();
       var seed=0, t=today(); for(var i=0;i<t.length;i++) seed=(seed*31+t.charCodeAt(i))%100003;
