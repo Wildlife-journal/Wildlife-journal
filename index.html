@@ -836,6 +836,9 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     f.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'f-cat'},'Category'),catSelect('f-cat','')));
     f.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn',type:'button',on:{click:function(){pickPhoto(function(d){photoData=d;status.textContent='Photo ready.'})}}},'Choose photo'),status));
+    f.appendChild(h('p',{class:'note'},'Not sure what it is? Upload the photo there to get a name, then type it above. ',
+      h('a',{class:'edit',href:'https://www.inaturalist.org/pages/computer_vision_demo',target:'_blank',rel:'noopener noreferrer'},'Identify with iNaturalist'),' \u00b7 ',
+      h('a',{class:'edit',href:'https://lens.google.com/',target:'_blank',rel:'noopener noreferrer'},'Google Lens')));
     f.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn solid',type:'submit'},'Save'),
       h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Cancel')));
