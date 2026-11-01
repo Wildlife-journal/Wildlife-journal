@@ -698,7 +698,11 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
           },Promise.resolve()).then(saveExtras).then(function(){render()});
         });
       }}},'Add pictures'),
-      h('button',{class:'btn',type:'button',on:{click:function(){ openRename(k,name); }}},'Rename')));
+      h('button',{class:'btn',type:'button',on:{click:function(){ openRename(k,name); }}},'Rename'),
+      h('a',{class:'btn',style:'text-decoration:none',href:'#',target:'_blank',rel:'noopener noreferrer',on:{click:function(e){
+        var q='Tell me about this animal from Costa Rica: '+name+(sci&&sci!==name?' ('+sci+')':'')+'. How do I recognise it, what does it eat, where does it live, and is it common near Uvita? I can attach a photo if you want to check the identification.';
+        e.currentTarget.href='https://claude.ai/new?q='+encodeURIComponent(q);
+      }}},'Ask Claude')));
     g.appendChild(sec('Pictures'));
     if(!pics.length) g.appendChild(h('p',{class:'note'},'No pictures yet. Tap Add pictures.'));
     var gal=h('div',{class:'gal'});
@@ -737,15 +741,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     ta.addEventListener('input',function(){ st.textContent=''; clearTimeout(tmr); tmr=setTimeout(function(){tmr=null;saveNote();},500); });
     ta.addEventListener('blur',function(){ if(tmr){ clearTimeout(tmr); tmr=null; saveNote(); } });
     g.appendChild(ta); g.appendChild(st);
-    g.appendChild(sec('Sightings'));
-    var ul=h('ul',{class:'list'});
-    all.forEach(function(o){
-      ul.appendChild(h('li',null,h('button',{class:'row',type:'button',on:{click:function(){openDetail(o.id)}}},
-        h('span',{class:'grow'},
-          h('span',{class:'cname',style:'display:block'},fmt(o.date)),
-          h('span',{class:'meta',style:'display:block'},o.place||'Place unknown')))));
-    });
-    g.appendChild(ul);
     g.appendChild(backLink());
     v.appendChild(g);
   }
@@ -836,8 +831,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     f.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'f-cat'},'Category'),catSelect('f-cat','')));
     f.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn',type:'button',on:{click:function(){pickPhoto(function(d){photoData=d;status.textContent='Photo ready.'})}}},'Choose photo'),status));
-    f.appendChild(h('p',{class:'note'},'Not sure what it is? Ask Claude with your photo, then type the name above. ',
-      h('a',{class:'edit',href:'https://claude.ai/new?q='+encodeURIComponent('I saw this animal in Costa Rica, near Uvita. Please identify it from the photo I am attaching and tell me its English name, its scientific name, and whether it is a bird, mammal, reptile, amphibian, insect, arachnid, fish or other.'),target:'_blank',rel:'noopener noreferrer'},'Ask Claude')));
     f.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn solid',type:'submit'},'Save'),
       h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Cancel')));
