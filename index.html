@@ -89,6 +89,38 @@ h1{font-family:var(--sans); font-weight:700; font-size:14px; line-height:1.2; le
 .dayc .grow{flex:1; min-width:0}
 .vitem{display:flex; flex-direction:column; gap:6px; margin-bottom:16px}
 .vitem video{width:100%; max-height:60vh; background:#000}
+.viewrow{display:flex; gap:8px}
+.viewrow .selectbar{flex:1; min-width:0}
+.viewrow .btn{flex:none; min-width:84px}
+.ic{display:inline-flex; width:20px; height:20px; color:var(--gold); flex:none; align-items:center; justify-content:center}
+.ic svg{width:100%; height:100%; fill:currentColor; stroke:currentColor}
+.chip{display:inline-flex; align-items:center; gap:7px}
+.chip .ic{width:16px; height:16px; color:var(--gold)}
+.chip[aria-pressed="true"] .ic{color:#E7D3A3}
+.row .thumb{width:56px; height:56px; flex:none}
+.row .thumb .ph{aspect-ratio:auto; width:56px; height:56px; border-radius:50%}
+.list.grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 12px}
+.card{display:flex; flex-direction:column; gap:6px; width:100%; border:0; background:none; text-align:left; padding:0; cursor:pointer}
+.card .ph{aspect-ratio:4/5}
+.card .cname{margin-top:2px}
+.cardmeta{display:flex; align-items:center; gap:6px}
+.cardmeta .ic{width:16px; height:16px}
+.hero{position:relative; overflow:hidden}
+.hero .ph{aspect-ratio:4/3}
+.hero .heroin{position:absolute; left:0; right:0; bottom:0; padding:56px 16px 14px; background:linear-gradient(to top,rgba(31,28,24,.85),rgba(31,28,24,0)); color:#FAF7F2}
+.hero .gtitle{color:#FAF7F2; margin:0}
+.hero .sci{color:#E8DFCC}
+.hero .herocat{display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:#E7D3A3; margin-bottom:6px}
+.hero .herocat .ic{color:#E7D3A3; width:16px; height:16px}
+.goal{display:flex; flex-direction:column; gap:8px}
+.bar{height:8px; background:var(--line)}
+.bar i{display:block; height:100%; background:var(--gold)}
+.badge{display:flex; gap:14px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line)}
+.badge.off{opacity:.45}
+.badge .mark{width:30px; height:30px; flex:none; border:1px solid var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--gold); font-weight:700}
+.badge.on .mark{background:var(--gold); color:#FAF7F2}
+.badge b{display:block; font-size:13px; letter-spacing:.1em; text-transform:uppercase}
+.badge span.d{font-family:var(--serif); font-style:italic; color:var(--muted)}
 .ph{
   position:relative; aspect-ratio:4/5; width:100%; max-width:100%; overflow:hidden;
   background:var(--icon) center/58% no-repeat, #FBF2E9; box-shadow:inset 0 0 0 1px var(--line);
@@ -215,7 +247,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   <div class="tools" id="tools">
     <input class="search" id="q" type="search" placeholder="Search a species or a place" aria-label="Search">
     <div class="chips" id="chips"></div>
-    <select class="selectbar" id="sort" aria-label="Sort the index"><option value="az">Sort: A to Z</option><option value="recent">Sort: most recent</option><option value="pics">Sort: most pictures</option></select>
+    <div class="viewrow"><select class="selectbar" id="sort" aria-label="Sort the index"><option value="az">Sort: A to Z</option><option value="recent">Sort: most recent</option><option value="pics">Sort: most pictures</option></select><button class="btn" id="vw" type="button">Grid</button></div>
   </div>
 
   <main id="view"></main>
@@ -278,7 +310,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
 
   var DATA=[{"id":"inat-262680895","date":"2024-12-10","place":"Puntarenas Province, Savegre de Aguirre, Costa Rica","sci":"Leptodon cayanensis","common":"Gray-headed Kite","taxon":"Aves","image":"https://static.inaturalist.org/photos/471751877/medium.jpeg","url":"https://www.inaturalist.org/observations/262680895","lat":"9.2951","lon":"-83.8802"},{"id":"inat-262680896","date":"2024-12-05","place":"Puntarenas Province, Savegre de Aguirre, Costa Rica","sci":"Centruroides bicolor","common":"Centruroides bicolor","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/471751891/medium.jpeg","url":"https://www.inaturalist.org/observations/262680896","lat":"9.2951","lon":"-83.8801"},{"id":"inat-262680908","date":"2024-12-04","place":"Puntarenas Province, Savegre de Aguirre, Costa Rica","sci":"Trogon caligatus","common":"Trogón violáceo","taxon":"Aves","image":"https://static.inaturalist.org/photos/471751917/medium.jpeg","url":"https://www.inaturalist.org/observations/262680908","lat":"9.2952","lon":"-83.8802"},{"id":"inat-262680916","date":"2024-12-05","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Penelope purpurascens","common":"Köí","taxon":"Aves","image":"https://static.inaturalist.org/photos/471751944/medium.jpeg","url":"https://www.inaturalist.org/observations/262680916","lat":"9.295","lon":"-83.879"},{"id":"inat-262680924","date":"2024-11-25","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/471751978/medium.jpeg","url":"https://www.inaturalist.org/observations/262680924","lat":"9.295","lon":"-83.879"},{"id":"inat-262680933","date":"2024-12-10","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Bradypus variegatus","common":"Brown-throated Three-toed Sloth","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/471752000/medium.jpeg","url":"https://www.inaturalist.org/observations/262680933","lat":"9.295","lon":"-83.879"},{"id":"inat-262680938","date":"","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Phoneutria","common":"Brazilian Wandering Spiders","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/471752016/medium.jpeg","url":"https://www.inaturalist.org/observations/262680938","lat":"9.295","lon":"-83.879"},{"id":"inat-262680952","date":"2023-02-24","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Stilpnia larvata","common":"Golden-hooded Tanager","taxon":"Aves","image":"https://static.inaturalist.org/photos/471752074/medium.jpeg","url":"https://www.inaturalist.org/observations/262680952","lat":"9.295","lon":"-83.879"},{"id":"inat-262680954","date":"2023-10-17","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Prothysana felderi","common":"Shag Carpet Caterpillar Moth","taxon":"Insecta","image":"https://static.inaturalist.org/photos/471752092/medium.jpeg","url":"https://www.inaturalist.org/observations/262680954","lat":"9.295","lon":"-83.879"},{"id":"inat-262680961","date":"2023-09-10","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Sericopelma","common":"Sericopelma","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/471752115/medium.jpeg","url":"https://www.inaturalist.org/observations/262680961","lat":"9.295","lon":"-83.879"},{"id":"inat-262680964","date":"2023-05-10","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Urania fulgens","common":"Urania Swallowtail Moth","taxon":"Insecta","image":"https://static.inaturalist.org/photos/471752133/medium.jpeg","url":"https://www.inaturalist.org/observations/262680964","lat":"9.295","lon":"-83.879"},{"id":"inat-262680974","date":"","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Apiomerus vexillarius","common":"Apiomerus vexillarius","taxon":"Insecta","image":"https://static.inaturalist.org/photos/471752152/medium.jpeg","url":"https://www.inaturalist.org/observations/262680974","lat":"9.295","lon":"-83.879"},{"id":"inat-262680984","date":"2025-01-20","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Acanthops fuscifolia","common":"Acanthops fuscifolia","taxon":"Insecta","image":"https://static.inaturalist.org/photos/471752182/medium.jpeg","url":"https://www.inaturalist.org/observations/262680984","lat":"9.295","lon":"-83.879"},{"id":"inat-262680988","date":"2025-02-16","place":"Puntarenas, CR","sci":"Ara macao","common":"Scarlet Macaw","taxon":"Aves","image":"https://static.inaturalist.org/photos/471752224/medium.jpeg","url":"https://www.inaturalist.org/observations/262680988","lat":"9.3826","lon":"-83.8206"},{"id":"inat-262680995","date":"2025-02-19","place":"","sci":"Araneae","common":"Spiders","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/471752262/medium.jpeg","url":"https://www.inaturalist.org/observations/262680995"},{"id":"inat-262681078","date":"2025-02-22","place":"","sci":"Anolis biporcatus","common":"Neotropical Green Anole","taxon":"Reptilia","image":"https://static.inaturalist.org/photos/471752569/medium.jpeg","url":"https://www.inaturalist.org/observations/262681078"},{"id":"inat-262681227","date":"2025-02-21","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Dacnis cayana","common":"Blue Dacnis","taxon":"Aves","image":"https://static.inaturalist.org/photos/471752799/medium.jpeg","url":"https://www.inaturalist.org/observations/262681227","lat":"9.295","lon":"-83.879"},{"id":"inat-262681330","date":"2025-02-17","place":"","sci":"Chlorophanes spiza","common":"Green Honeycreeper","taxon":"Aves","image":"https://static.inaturalist.org/photos/471753004/medium.jpeg","url":"https://www.inaturalist.org/observations/262681330"},{"id":"inat-262681393","date":"2025-02-16","place":"","sci":"Ara macao","common":"Scarlet Macaw","taxon":"Aves","image":"https://static.inaturalist.org/photos/471753122/medium.jpeg","url":"https://www.inaturalist.org/observations/262681393"},{"id":"inat-262683094","date":"2023-05-07","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Dendrobates auratus","common":"Green-and-black Poison Dart Frog","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/471756400/medium.jpeg","url":"https://www.inaturalist.org/observations/262683094","lat":"9.295","lon":"-83.879"},{"id":"inat-262683292","date":"2023-09-10","place":"Aguirre, CR-PU, CR","sci":"Sericopelma","common":"Sericopelma","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/471756697/medium.jpeg","url":"https://www.inaturalist.org/observations/262683292","lat":"9.2968","lon":"-83.8806"},{"id":"inat-262806107","date":"2025-02-23","place":"Aguirre, CR-PU, CR","sci":"Sarcoramphus papa","common":"King Vulture","taxon":"Aves","image":"https://static.inaturalist.org/photos/472007056/medium.jpeg","url":"https://www.inaturalist.org/observations/262806107","lat":"9.2949","lon":"-83.8791"},{"id":"inat-262806154","date":"2024-11-25","place":"Aguirre, CR-PU, CR","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/472007191/medium.jpeg","url":"https://www.inaturalist.org/observations/262806154","lat":"9.2949","lon":"-83.879"},{"id":"inat-262806395","date":"2023-03-08","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/472007609/medium.jpeg","url":"https://www.inaturalist.org/observations/262806395","lat":"9.295","lon":"-83.8791"},{"id":"inat-262809482","date":"2025-02-22","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Trogon massena","common":"Trogón Coliplomizo","taxon":"Aves","image":"https://static.inaturalist.org/photos/472013790/medium.jpeg","url":"https://www.inaturalist.org/observations/262809482","lat":"9.2949","lon":"-83.8791"},{"id":"inat-263150933","date":"","place":"Savegre, Provincia de Puntarenas, Quepos, Costa Rica","sci":"Chloroceryle americana","common":"Green Kingfisher","taxon":"Aves","image":"https://static.inaturalist.org/photos/472697387/medium.jpeg","url":"https://www.inaturalist.org/observations/263150933","lat":"9.3138","lon":"-83.9451"},{"id":"inat-267370946","date":"2025-03-28","place":"Puntarenas, CR","sci":"Oophaga granulifera","common":"Granular Poison Frog","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/480480191/medium.jpeg","url":"https://www.inaturalist.org/observations/267370946","lat":"9.322","lon":"-83.8386"},{"id":"inat-267371257","date":"","place":"Puntarenas, CR","sci":"Oophaga granulifera","common":"Granular Poison Frog","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/480480991/medium.jpeg","url":"https://www.inaturalist.org/observations/267371257","lat":"9.2972","lon":"-83.8756"},{"id":"inat-270078004","date":"2025-04-12","place":"Puntarenas Province, Savegre de Aguirre, Dominical, Costa Rica","sci":"Ctenosaura similis","common":"Garrobo","taxon":"Reptilia","image":"https://static.inaturalist.org/photos/485667928/medium.jpeg","url":"https://www.inaturalist.org/observations/270078004","lat":"9.25","lon":"-83.8615"},{"id":"inat-270078219","date":"2025-04-11","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Piranga olivacea","common":"Scarlet Tanager","taxon":"Aves","image":"https://static.inaturalist.org/photos/485668314/medium.jpeg","url":"https://www.inaturalist.org/observations/270078219","lat":"9.2948","lon":"-83.8786"},{"id":"inat-271254455","date":"2025-04-17","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Cacicus uropygialis","common":"Scarlet-rumped Cacique","taxon":"Aves","image":"https://static.inaturalist.org/photos/487909078/medium.jpeg","url":"https://www.inaturalist.org/observations/271254455","lat":"9.2949","lon":"-83.879"},{"id":"inat-271299913","date":"2025-04-18","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Leptodon cayanensis","common":"Gray-headed Kite","taxon":"Aves","image":"https://static.inaturalist.org/photos/487994793/medium.jpeg","url":"https://www.inaturalist.org/observations/271299913","lat":"9.2949","lon":"-83.8789"},{"id":"inat-271300410","date":"","place":"Aguirre, CR-PU, CR","sci":"Insecta","common":"Insects","taxon":"Insecta","image":"https://static.inaturalist.org/photos/487995731/medium.jpeg","url":"https://www.inaturalist.org/observations/271300410","lat":"9.2949","lon":"-83.879"},{"id":"inat-272782435","date":"2025-04-19","place":"","sci":"Trogon caligatus","common":"Trogón violáceo","taxon":"Aves","image":"https://static.inaturalist.org/photos/490764037/medium.jpeg","url":"https://www.inaturalist.org/observations/272782435"},{"id":"inat-296290403","date":"2025-07-08","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Taenodema","common":"Taenodema","taxon":"Insecta","image":"https://static.inaturalist.org/photos/533488095/medium.jpg","url":"https://www.inaturalist.org/observations/296290403","lat":"9.295","lon":"-83.879"},{"id":"inat-298451062","date":"2025-07-09","place":"","sci":"Acrididea","common":"Grasshoppers","taxon":"Insecta","image":"https://static.inaturalist.org/photos/537591153/medium.jpg","url":"https://www.inaturalist.org/observations/298451062"},{"id":"inat-298452806","date":"2025-07-16","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Corallus ruschenbergerii","common":"Dormilona","taxon":"Reptilia","image":"https://static.inaturalist.org/photos/537594107/medium.jpg","url":"https://www.inaturalist.org/observations/298452806","lat":"9.2949","lon":"-83.879"},{"id":"inat-298532295","date":"2025-07-09","place":"Aguirre, CR-PU, CR","sci":"Rochaina","common":"Rochaina","taxon":"Insecta","image":"https://static.inaturalist.org/photos/537746971/medium.jpg","url":"https://www.inaturalist.org/observations/298532295","lat":"9.2948","lon":"-83.8791"},{"id":"inat-298533787","date":"2025-06-25","place":"Aguirre, CR-PU, CR","sci":"Choeradodis rhombicollis","common":"Peruvian Shield Mantis","taxon":"Insecta","image":"https://static.inaturalist.org/photos/537749863/medium.jpg","url":"https://www.inaturalist.org/observations/298533787","lat":"9.2949","lon":"-83.8791"},{"id":"inat-307331770","date":"2025-08-18","place":"Lagunas, Provincia de Puntarenas, Costa Rica","sci":"Apiomerus vexillarius","common":"Apiomerus vexillarius","taxon":"Insecta","image":"https://static.inaturalist.org/photos/554328734/medium.jpg","url":"https://www.inaturalist.org/observations/307331770","lat":"9.2949","lon":"-83.879"},{"id":"inat-323903035","date":"2025-10-29","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Piranga rubra","common":"Summer Tanager","taxon":"Aves","image":"https://static.inaturalist.org/photos/586152976/medium.jpg","url":"https://www.inaturalist.org/observations/323903035","lat":"9.2949","lon":"-83.8789"},{"id":"inat-324194001","date":"2025-10-31","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Trogon caligatus","common":"Trogón violáceo","taxon":"Aves","image":"https://static.inaturalist.org/photos/586732127/medium.jpg","url":"https://www.inaturalist.org/observations/324194001","lat":"9.2951","lon":"-83.879"},{"id":"inat-324194018","date":"2025-10-31","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Trogon massena","common":"Trogón Coliplomizo","taxon":"Aves","image":"https://static.inaturalist.org/photos/586732167/medium.jpg","url":"https://www.inaturalist.org/observations/324194018","lat":"9.2951","lon":"-83.879"},{"id":"inat-324194222","date":"2025-04-18","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Piranga olivacea","common":"Scarlet Tanager","taxon":"Aves","image":"https://static.inaturalist.org/photos/586732631/medium.jpg","url":"https://www.inaturalist.org/observations/324194222","lat":"9.2951","lon":"-83.8791"},{"id":"inat-324194569","date":"2025-08-19","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/586733288/medium.jpg","url":"https://www.inaturalist.org/observations/324194569","lat":"9.295","lon":"-83.8791"},{"id":"inat-327183206","date":"2025-11-18","place":"Provincia de Puntarenas, Savegre, Playa Matapalo, Costa Rica","sci":"Trachycephalus macrotis","common":"Milk Frog","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/592696447/medium.jpg","url":"https://www.inaturalist.org/observations/327183206","lat":"9.295","lon":"-83.8791"},{"id":"inat-327251872","date":"2025-11-19","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Dryocopus lineatus","common":"Lineated Woodpecker","taxon":"Aves","image":"https://static.inaturalist.org/photos/592840864/medium.jpg","url":"https://www.inaturalist.org/observations/327251872","lat":"9.2949","lon":"-83.879"},{"id":"inat-327419597","date":"2022-10-26","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Lophostrix cristata","common":"Crested Owl","taxon":"Aves","image":"https://static.inaturalist.org/photos/593176169/medium.jpg","url":"https://www.inaturalist.org/observations/327419597","lat":"9.2954","lon":"-83.8703"},{"id":"inat-327419754","date":"2022-10-17","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Rhetus arcius","common":"Long-tailed Metalmark","taxon":"Insecta","image":"https://static.inaturalist.org/photos/593176542/medium.jpg","url":"https://www.inaturalist.org/observations/327419754","lat":"9.2957","lon":"-83.8709"},{"id":"inat-327504713","date":"2022-11-10","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Centroleninae","common":"Centroleninae","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/593346791/medium.jpg","url":"https://www.inaturalist.org/observations/327504713","lat":"9.2954","lon":"-83.8722"},{"id":"inat-328341922","date":"2025-11-26","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Piranga rubra","common":"Summer Tanager","taxon":"Aves","image":"https://static.inaturalist.org/photos/594957561/medium.jpg","url":"https://www.inaturalist.org/observations/328341922","lat":"9.2949","lon":"-83.879"},{"id":"inat-328342000","date":"2025-11-26","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Trogon caligatus","common":"Trogón violáceo","taxon":"Aves","image":"https://static.inaturalist.org/photos/594957786/medium.jpg","url":"https://www.inaturalist.org/observations/328342000","lat":"9.2949","lon":"-83.879"},{"id":"inat-328342183","date":"2025-11-26","place":"Aguirre, CR-PU, CR","sci":"Pionus senilis","common":"White-crowned Parrot","taxon":"Aves","image":"https://static.inaturalist.org/photos/594958140/medium.jpg","url":"https://www.inaturalist.org/observations/328342183","lat":"9.2949","lon":"-83.8791"},{"id":"inat-328485711","date":"2025-11-24","place":"Puntarenas Province, Savegre de Aguirre, Costa Rica","sci":"Melanerpes chrysauchen","common":"Golden-naped Woodpecker","taxon":"Aves","image":"https://static.inaturalist.org/photos/595243481/medium.jpg","url":"https://www.inaturalist.org/observations/328485711","lat":"9.2967","lon":"-83.8806"},{"id":"inat-328552372","date":"2025-11-26","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Setophaga pensylvanica","common":"Reinita flanquicastaña","taxon":"Aves","image":"https://static.inaturalist.org/photos/595502626/medium.jpg","url":"https://www.inaturalist.org/observations/328552372","lat":"9.295","lon":"-83.8791"},{"id":"inat-328610448","date":"2024-02-15","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Cebus imitator","common":"Central American White-faced Capuchin","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/595503298/medium.jpg","url":"https://www.inaturalist.org/observations/328610448","lat":"9.295","lon":"-83.8791"},{"id":"inat-328768387","date":"2025-05-15","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Bradypus variegatus","common":"Brown-throated Three-toed Sloth","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/595822148/medium.jpg","url":"https://www.inaturalist.org/observations/328768387","lat":"9.2948","lon":"-83.879"},{"id":"inat-328768556","date":"2025-04-10","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Tropidacris cristata","common":"giant red-winged grasshopper","taxon":"Insecta","image":"https://static.inaturalist.org/photos/595822817/medium.jpg","url":"https://www.inaturalist.org/observations/328768556","lat":"9.2949","lon":"-83.8791"},{"id":"inat-329617912","date":"2025-12-01","place":"Puntarenas, CR","sci":"Amazona farinosa","common":"Mealy Amazon","taxon":"Aves","image":"https://static.inaturalist.org/photos/597530260/medium.jpg","url":"https://www.inaturalist.org/observations/329617912","lat":"9.3771","lon":"-83.8872"},{"id":"inat-329618022","date":"2025-12-02","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/597530398/medium.jpg","url":"https://www.inaturalist.org/observations/329618022","lat":"9.2949","lon":"-83.879"},{"id":"inat-329999652","date":"2025-12-08","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Trogon caligatus","common":"Trogón violáceo","taxon":"Aves","image":"https://static.inaturalist.org/photos/598298770/medium.jpg","url":"https://www.inaturalist.org/observations/329999652","lat":"9.295","lon":"-83.8791"},{"id":"inat-329999696","date":"2025-12-07","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Pteroglossus frantzii","common":"Cusingo","taxon":"Aves","image":"https://static.inaturalist.org/photos/598298944/medium.jpg","url":"https://www.inaturalist.org/observations/329999696","lat":"9.295","lon":"-83.879"},{"id":"inat-330034491","date":"2025-12-08","place":"Provincia de Puntarenas, Savegre, Playa Matapalo, Costa Rica","sci":"Psittacara finschi","common":"Crimson-fronted Parakeet","taxon":"Aves","image":"https://static.inaturalist.org/photos/598370490/medium.jpg","url":"https://www.inaturalist.org/observations/330034491","lat":"9.2949","lon":"-83.8791"},{"id":"inat-330708653","date":"2025-12-13","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Rupornis magnirostris","common":"gavilán chapulinero","taxon":"Aves","image":"https://static.inaturalist.org/photos/599759155/medium.jpg","url":"https://www.inaturalist.org/observations/330708653","lat":"9.2948","lon":"-83.8791"},{"id":"inat-334648658","date":"2026-01-13","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Harpagus bidentatus","common":"Double-toothed Kite","taxon":"Aves","image":"https://static.inaturalist.org/photos/607767192/medium.jpg","url":"https://www.inaturalist.org/observations/334648658","lat":"9.2949","lon":"-83.879"},{"id":"inat-334947972","date":"2026-01-14","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Discomorpha conspersipennis","common":"Discomorpha conspersipennis","taxon":"Insecta","image":"https://static.inaturalist.org/photos/608380171/medium.jpg","url":"https://www.inaturalist.org/observations/334947972","lat":"9.295","lon":"-83.8791"},{"id":"inat-334948143","date":"2026-01-04","place":"Puntarenas Province, Savegre de Aguirre, Dominical, Costa Rica","sci":"Pomacanthus zonipectus","common":"Cortez Angelfish","taxon":"Actinopterygii","image":"https://static.inaturalist.org/photos/608380639/medium.jpg","url":"https://www.inaturalist.org/observations/334948143","lat":"9.2421","lon":"-83.8527"},{"id":"inat-341460810","date":"2026-02-08","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Fulgoromorpha","common":"Planthoppers","taxon":"Insecta","image":"https://static.inaturalist.org/photos/621618271/medium.jpg","url":"https://www.inaturalist.org/observations/341460810","lat":"9.295","lon":"-83.879"},{"id":"inat-346883070","date":"2026-03-22","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Dryas iulia moderata","common":"Dryas iulia moderata","taxon":"Insecta","image":"https://static.inaturalist.org/photos/632383183/medium.jpg","url":"https://www.inaturalist.org/observations/346883070","lat":"9.295","lon":"-83.8789"},{"id":"inat-362333405","date":"","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Nyctomys sumichrasti","common":"Sumichrast's Vesper Rat","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/661318309/medium.jpg","url":"https://www.inaturalist.org/observations/362333405","lat":"9.2956","lon":"-83.8789"},{"id":"inat-371621563","date":"","place":"","sci":"","common":"Unidentified","taxon":"","image":"https://static.inaturalist.org/photos/678996397/medium.jpg","url":"https://www.inaturalist.org/observations/371621563"},{"id":"inat-371621620","date":"2026-05-22","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Rhinella horribilis","common":"Giant Toad","taxon":"Amphibia","image":"https://static.inaturalist.org/photos/678996523/medium.jpg","url":"https://www.inaturalist.org/observations/371621620","lat":"9.2957","lon":"-83.8789"},{"id":"inat-375516324","date":"","place":"","sci":"Iguana iguana","common":"Green Iguana","taxon":"Reptilia","image":"https://static.inaturalist.org/photos/686500875/medium.jpg","url":"https://www.inaturalist.org/observations/375516324"},{"id":"inat-375516626","date":"2026-06-26","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Zammara smaragdula","common":"Zammara smaragdula","taxon":"Insecta","image":"https://static.inaturalist.org/photos/686501332/medium.jpg","url":"https://www.inaturalist.org/observations/375516626","lat":"9.2957","lon":"-83.8788"},{"id":"inat-386072444","date":"2026-07-28","place":"Puntarenas Province, Savegre de Aguirre, Costa Rica","sci":"Telchin atymnius","common":"Screwworm","taxon":"Insecta","image":"https://static.inaturalist.org/photos/706847695/medium.jpg","url":"https://www.inaturalist.org/observations/386072444","lat":"9.2351","lon":"-83.8399"},{"id":"inat-386073176","date":"2026-07-18","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Dryas iulia","common":"Julia Heliconian","taxon":"Insecta","image":"https://static.inaturalist.org/photos/706849164/medium.jpg","url":"https://www.inaturalist.org/observations/386073176","lat":"9.2957","lon":"-83.8789"},{"id":"inat-390362096","date":"2026-07-29","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Magnoliopsida","common":"Dicots","taxon":"Plantae","image":"https://static.inaturalist.org/photos/715151997/medium.jpg","url":"https://www.inaturalist.org/observations/390362096","lat":"9.2957","lon":"-83.8788"},{"id":"inat-390362437","date":"2026-08-11","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Odocoileus virginianus","common":"Capasurí","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/715152432/medium.jpg","url":"https://www.inaturalist.org/observations/390362437","lat":"9.2957","lon":"-83.8788"},{"id":"inat-396482449","date":"2026-09-01","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Dasypus fenestratus","common":"West Andean Long-nosed Armadillo","taxon":"Mammalia","image":"https://static.inaturalist.org/photos/727091517/medium.jpg","url":"https://www.inaturalist.org/observations/396482449","lat":"9.2957","lon":"-83.8789"},{"id":"inat-408603485","date":"2026-09-08","place":"San José Province, Rivas, Costa Rica","sci":"Nymphalidae","common":"Brush-footed Butterflies","taxon":"Insecta","image":"https://static.inaturalist.org/photos/751127454/medium.jpg","url":"https://www.inaturalist.org/observations/408603485","lat":"9.4194","lon":"-83.6603"},{"id":"inat-410310200","date":"2026-10-15","place":"Puntarenas Province, Savegre de Aguirre, Lagunas, Costa Rica","sci":"Eriophora fuliginea","common":"Tropical Orb Weaver","taxon":"Arachnida","image":"https://static.inaturalist.org/photos/754592490/medium.jpg","url":"https://www.inaturalist.org/observations/410310200","lat":"9.2956","lon":"-83.879"}];
   var obs=[], extras=[], covers={}, names={}, notes={}, favs={}, videos=[], vidUrl={}, isSample=false, photoCache={};
-  var state={sp:null,q:'',taxon:'all',limit:60,sort:'az'}, ready=false;
+  var state={sp:null,q:'',taxon:'all',limit:60,sort:'az',view:'list'}, ready=false;
 
   /* storage: IndexedDB with an in-memory fallback */
   var memory={}, dbp=null;
@@ -404,12 +436,12 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   function renderChips(){
     var seen={}; obs.forEach(function(o){if(o.taxon) seen[o.taxon]=(seen[o.taxon]||0)+1});
     var box=$('#chips'); box.textContent='';
-    function chip(val,label){
-      box.appendChild(h('button',{class:'chip',type:'button','aria-pressed':String(state.taxon===val),on:{click:function(){state.taxon=val;state.limit=60;render()}}},label));
+    function chip(val,label,tx){
+      box.appendChild(h('button',{class:'chip',type:'button','aria-pressed':String(state.taxon===val),on:{click:function(){state.taxon=val;state.limit=60;render()}}},tx?catIcon(tx):null,label));
     }
     chip('all','All');
     if(Object.keys(favs).some(function(k){ return obs.some(function(o){return key(o)===k}); })) chip('fav','\u2605 Favorites');
-    Object.keys(seen).sort(function(a,b){return seen[b]-seen[a]}).forEach(function(t){chip(t,TAXA[t]||t)});
+    Object.keys(seen).sort(function(a,b){return seen[b]-seen[a]}).forEach(function(t){chip(t,TAXA[t]||t,t)});
   }
   function groups(){
     var map={};
@@ -452,22 +484,92 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     });
     if(!rows.length){ v.appendChild(h('p',{class:'empty'},obs.length?'Nothing matches this search.':'No animals yet. Tap Add or import your iNaturalist file.')); return; }
     if(!state.q.trim() && state.taxon==='all') renderHome(v);
-    var ul=h('ul',{class:'list'}), last='';
+    var grid=state.view==='grid';
+    var ul=h('ul',{class:grid?'list grid':'list'}), last='';
     rows.forEach(function(g){
       var nm=g.common||g.sci||'', L=nm.charAt(0).toUpperCase(); if(!/[A-Z]/.test(L)) L='#';
-      if(useLetters && L!==last){ last=L; ul.appendChild(h('li',{class:'letter','aria-hidden':'true'},L)); }
-      var n=g.n;
-      ul.appendChild(h('li',null,h('button',{class:'row',type:'button',on:{click:function(){go(g.key)}}},
-        h('span',{class:'grow'},
-          h('span',{class:'cname',style:'display:block'},(favs[g.key]?'\u2605 ':'')+nm),
-          g.common&&g.sci&&g.common!==g.sci?h('span',{class:'sci',style:'display:block'},g.sci):null),
-        h('span',{class:'meta cnt'+(n?'':' none')},n?n+(n===1?' picture':' pictures'):'No pictures'),
-        h('span',{class:'chev','aria-hidden':'true'},'\u203a'))));
+      if(!grid && useLetters && L!==last){ last=L; ul.appendChild(h('li',{class:'letter','aria-hidden':'true'},L)); }
+      var n=g.n, cv=coverOf(g.key), tx=taxonOf(g.key), label=(favs[g.key]?'\u2605 ':'')+nm;
+      var ptxt=n?n+(n===1?' picture':' pictures'):'No pictures';
+      if(grid){
+        ul.appendChild(h('li',null,h('button',{class:'card',type:'button',on:{click:function(){go(g.key)}}},
+          pic(cv?cv.pic:{}),
+          h('span',{class:'cname'},label),
+          h('span',{class:'meta cardmeta'},catIcon(tx),ptxt))));
+      } else {
+        ul.appendChild(h('li',null,h('button',{class:'row',type:'button',on:{click:function(){go(g.key)}}},
+          h('span',{class:'thumb'},pic(cv?cv.pic:{})),
+          h('span',{class:'grow'},
+            h('span',{class:'cname',style:'display:block'},label),
+            g.common&&g.sci&&g.common!==g.sci?h('span',{class:'sci',style:'display:block'},g.sci):null),
+          catIcon(tx),
+          h('span',{class:'meta cnt'+(n?'':' none')},ptxt),
+          h('span',{class:'chev','aria-hidden':'true'},'\u203a'))));
+      }
     });
     v.appendChild(ul);
   }
 
+  /* small category icons (drawn here, no pictures needed) */
+  var ICONS={
+    Aves:'<circle cx="16.5" cy="7.5" r="3.4"/><path d="M3 15c4 0 8-3 10-7h6c0 7-5 12-11 12-3 0-5-2-5-5z"/><path d="M19.5 6.2L24 7.6l-4.5 1.8z"/><path d="M3.5 15L1 12l5 1z"/>',
+    Insecta:'<path d="M12 12C9 4 2 3 3 9c.5 3 5 4.5 9 3z"/><path d="M12 12c-5 1-7 6-4 8 2 1 4-3 4-8z"/><path d="M12 12c3-8 10-9 9-3-.5 3-5 4.500-9 3z"/><path d="M12 12c5 1 7 6 4 8-2 1-4-3-4-8z"/><rect x="11" y="6" width="2" height="13" rx="1"/>',
+    Mammalia:'<ellipse cx="12" cy="16" rx="5.500" ry="4.500"/><circle cx="4.500" cy="11" r="2.200"/><circle cx="9" cy="5.500" r="2.400"/><circle cx="15" cy="5.500" r="2.400"/><circle cx="19.500" cy="11" r="2.200"/>',
+    Reptilia:'<path d="M3 19c5 0 6-4 9-5s5-3 5-8" fill="none" stroke-width="3.200" stroke-linecap="round"/><circle cx="18" cy="5" r="3"/><path d="M8 15l-3-2M10 18l-1 3M14 11l3 3" fill="none" stroke-width="1.800" stroke-linecap="round"/>',
+    Amphibia:'<ellipse cx="12" cy="15" rx="9" ry="5.500"/><circle cx="6.500" cy="8.500" r="3.200"/><circle cx="17.500" cy="8.500" r="3.200"/>',
+    Arachnida:'<circle cx="12" cy="14" r="4"/><circle cx="12" cy="8.500" r="2.300"/><path d="M8 12L2 8M8 14L1 15M9 17L4 22M16 12l6-4M16 14l7 1M15 17l5 5M10 7L6 3M14 7l4-4" fill="none" stroke-width="1.600" stroke-linecap="round"/>',
+    Actinopterygii:'<ellipse cx="10" cy="12" rx="8" ry="5"/><path d="M16 12l7-5v10z"/>',
+    Plantae:'<path d="M4 20C4 10 10 4 21 3c0 11-5 17-15 17z"/><path d="M4 20l9-9" fill="none" stroke="#FAF7F2" stroke-width="1.600"/>',
+    other:'<circle cx="12" cy="12" r="9" fill="none" stroke-width="2"/><circle cx="12" cy="12" r="4"/>'
+  };
+  function catIcon(t){
+    var d=ICONS[t]||ICONS.other, sp=document.createElement('span'); sp.className='ic'; sp.setAttribute('aria-hidden','true');
+    sp.innerHTML='<svg viewBox="0 0 24 24" stroke="none">'+d+'</svg>';
+    return sp;
+  }
+  function taxonOf(k){ var f=obs.filter(function(o){return key(o)===k && o.taxon})[0]; return f?f.taxon:''; }
   function nameOf(k){ var f=obs.filter(function(o){return key(o)===k})[0]; return names[k]||(f&&(f.common||f.sci))||k; }
+
+  function badgeList(){
+    var keys={}; obs.forEach(function(o){ keys[key(o)]=1; });
+    var ks=Object.keys(keys), c={}, tot=0;
+    ks.forEach(function(k){ var t=taxonOf(k)||'other'; c[t]=(c[t]||0)+1; tot+=pictures(k).length; });
+    var own=extras.length+obs.filter(function(o){return o.hasPhoto}).length, n=ks.length;
+    function b(t,d,ok){ return {title:t,desc:d,done:!!ok}; }
+    return [
+      b('First bird','Add your first bird',(c.Aves||0)>=1),
+      b('10 birds','10 different birds',(c.Aves||0)>=10),
+      b('25 birds','25 different birds',(c.Aves||0)>=25),
+      b('First insect','Add your first insect',(c.Insecta||0)>=1),
+      b('10 insects','10 different insects',(c.Insecta||0)>=10),
+      b('First mammal','Add your first mammal',(c.Mammalia||0)>=1),
+      b('First reptile','Add your first reptile',(c.Reptilia||0)>=1),
+      b('First amphibian','Add your first frog or amphibian',(c.Amphibia||0)>=1),
+      b('First arachnid','Add your first spider or scorpion',(c.Arachnida||0)>=1),
+      b('10 animals','10 different animals',n>=10),
+      b('25 animals','25 different animals',n>=25),
+      b('50 animals','50 different animals',n>=50),
+      b('100 animals','100 different animals',n>=100),
+      b('50 pictures','50 pictures in your journal',tot>=50),
+      b('100 pictures','100 pictures in your journal',tot>=100),
+      b('Your own photo','Add a picture of your own',own>=1),
+      b('5 favorites','Mark 5 favorites',Object.keys(favs).length>=5),
+      b('First video','Add a video',videos.length>=1)
+    ];
+  }
+  function openBadges(){
+    var p=$('#panel'); p.textContent='';
+    var list=badgeList(), got=list.filter(function(x){return x.done}).length;
+    p.appendChild(h('h2',null,'Badges'));
+    p.appendChild(h('p',{class:'note'},got+' of '+list.length+' earned'));
+    list.forEach(function(x){
+      p.appendChild(h('div',{class:'badge '+(x.done?'on':'off')},
+        h('span',{class:'mark','aria-hidden':'true'},x.done?'\u2713':''),
+        h('span',null,h('b',null,x.title),h('span',{class:'d'},x.desc))));
+    });
+    p.appendChild(h('div',{class:'btnrow center'},h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Close')));
+    openSheet();
+  }
   /* first page: backup reminder, small stats and the animal of the day */
   function renderHome(v){
     var box=h('div',{class:'home'});
@@ -478,16 +580,22 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     var tot=0, best=null, bestN=0, withCover=[];
     ks.forEach(function(k){ var n=pictures(k).length; tot+=n; if(n>bestN){bestN=n;best=k;} if(n && !/unidentified|unknown/i.test(nameOf(k))) withCover.push(k); });
     box.appendChild(h('p',{class:'stats'},tot+(tot===1?' picture':' pictures')+' \u00b7 '+newN+' new in '+yr+(best?' \u00b7 most pictures: '+nameOf(best)+' ('+bestN+')':'')));
+    var steps=[25,50,75,100,150,200,300,500,750,1000], goal=steps.filter(function(x){return x>ks.length})[0]||(Math.floor(ks.length/100)+1)*100;
+    box.appendChild(h('div',{class:'goal'},
+      h('p',{class:'stats'},ks.length+' of '+goal+' animals'),
+      h('div',{class:'bar',role:'img','aria-label':ks.length+' of '+goal+' animals'},h('i',{style:'width:'+Math.min(100,Math.round(ks.length/goal*100))+'%'}))));
+    var bl=badgeList();
+    box.appendChild(h('button',{class:'btn',type:'button',on:{click:openBadges}},'\u2605 Badges: '+bl.filter(function(x){return x.done}).length+' of '+bl.length));
     if(withCover.length){
       withCover.sort();
       var seed=0, t=today(); for(var i=0;i<t.length;i++) seed=(seed*31+t.charCodeAt(i))%100003;
       var k=withCover[seed%withCover.length], cv=coverOf(k), o0=obs.filter(function(o){return key(o)===k})[0];
-      box.appendChild(h('button',{class:'dayc',type:'button',on:{click:function(){go(k)}}},
+      box.insertBefore(h('button',{class:'dayc',type:'button',on:{click:function(){go(k)}}},
         pic(cv.pic),
         h('span',{class:'grow'},
           h('span',{class:'label gold',style:'display:block'},'Animal of the day'),
           h('span',{class:'cname',style:'display:block'},nameOf(k)),
-          o0&&binom(o0.sci)?h('span',{class:'sci',style:'display:block'},binom(o0.sci)):null)));
+          o0&&binom(o0.sci)?h('span',{class:'sci',style:'display:block'},binom(o0.sci)):null)), box.firstChild);
     }
     v.appendChild(box);
     get('lastBackup').then(function(d){
@@ -506,7 +614,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       state.sp=null; k=null; if(location.hash) history.replaceState(null,'',location.pathname+location.search);
     }
     var v=$('#view'); v.textContent='';
-    $('#tools').hidden=!!k;
+    $('#tools').hidden=!!k; $('#vw').textContent=state.view==='grid'?'List':'Grid';
     $('#tab-index').setAttribute('aria-pressed',String(!k));
     if(k) renderGallery(v,k);
     else { renderChips(); renderIndex(v); }
@@ -519,6 +627,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     state.sp=k; render(); if(!keep) window.scrollTo(0,0);
   }
   window.addEventListener('hashchange',function(){route(false)});
+  $('#vw').addEventListener('click',function(){ state.view=state.view==='grid'?'list':'grid'; put('prefView',state.view); render(); });
   $('#sort').addEventListener('change',function(){ state.sort=this.value; state.limit=60; render(); });
   function say(msg){ var nb=$('#notice'); nb.dataset.msg='1'; nb.hidden=false; nb.textContent=msg; }
 
@@ -664,6 +773,56 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     return wrap;
   }
 
+  /* a nice card to share: photo, name, date and the journal logo */
+  function makeCard(o,name,sci,date,place){
+    var fonts=(document.fonts&&document.fonts.ready)?document.fonts.ready.catch(function(){}):Promise.resolve();
+    return Promise.all([loadForCrop(o),fonts]).then(function(r){
+      var res=r[0]; if(!res||!res.clean) return null;
+      var W=1080,H=1380, c=document.createElement('canvas'); c.width=W; c.height=H; var x=c.getContext('2d');
+      x.fillStyle='#F1EBE1'; x.fillRect(0,0,W,H);
+      x.fillStyle='#FAF7F2'; x.fillRect(36,36,W-72,H-72);
+      x.strokeStyle='#A98C55'; x.lineWidth=3; x.strokeRect(36,36,W-72,H-72);
+      x.lineWidth=2; x.strokeRect(56,56,W-112,H-112);
+      var px=120,py=120,pw=W-240,ph=860, im=res.img, iw=im.naturalWidth, ih=im.naturalHeight;
+      var sc=Math.max(pw/iw,ph/ih), dw=iw*sc, dh=ih*sc;
+      x.save(); x.beginPath(); x.rect(px,py,pw,ph); x.clip(); x.drawImage(im,px+(pw-dw)/2,py+(ph-dh)/2,dw,dh); x.restore();
+      x.strokeStyle='#A98C55'; x.lineWidth=2; x.strokeRect(px,py,pw,ph);
+      x.textAlign='center'; x.fillStyle='#1F1C18';
+      var size=56; x.font='700 '+size+'px Lato, Avenir Next, Segoe UI, sans-serif';
+      try{ x.letterSpacing='6px'; }catch(e){}
+      var title=name.toUpperCase();
+      while(x.measureText(title).width>pw-20 && size>28){ size-=2; x.font='700 '+size+'px Lato, Avenir Next, Segoe UI, sans-serif'; }
+      x.fillText(title,W/2,1070);
+      try{ x.letterSpacing='0px'; }catch(e){}
+      if(sci&&sci!==name){ x.fillStyle='#6B6256'; x.font='italic 400 40px Lora, Georgia, serif'; x.fillText(sci,W/2,1128); }
+      var line=[date?fmt(date):'',place||''].filter(Boolean).join('  \u00b7  ');
+      if(line){ x.fillStyle='#6B6256'; x.font='400 32px Lato, Avenir Next, Segoe UI, sans-serif'; x.fillText(line,W/2,1190); }
+      x.strokeStyle='#A98C55'; x.lineWidth=2; x.beginPath(); x.moveTo(W/2-250,1236); x.lineTo(W/2-18,1236); x.moveTo(W/2+18,1236); x.lineTo(W/2+250,1236); x.stroke();
+      x.fillStyle='#A98C55'; x.save(); x.translate(W/2,1236); x.rotate(Math.PI/4); x.fillRect(-6,-6,12,12); x.restore();
+      var m=/url\(["']?(data:[^"')]+)["']?\)/.exec(getComputedStyle(document.documentElement).getPropertyValue('--icon')||'');
+      function finish(logo){
+        if(logo){ var lr=40, cx=W/2-190, cy=1296; x.save(); x.beginPath(); x.arc(cx,cy,lr,0,Math.PI*2); x.clip(); x.drawImage(logo,cx-lr,cy-lr,lr*2,lr*2); x.restore(); x.strokeStyle='#A98C55'; x.lineWidth=2; x.beginPath(); x.arc(cx,cy,lr,0,Math.PI*2); x.stroke(); }
+        x.fillStyle='#A98C55'; x.textAlign='left'; x.font='700 28px Lato, Avenir Next, Segoe UI, sans-serif'; try{ x.letterSpacing='7px'; }catch(e){}
+        x.fillText('WILDLIFE JOURNAL',W/2-132,1306);
+        return new Promise(function(done){ try{ c.toBlob(function(b){ done(b||null); },'image/png'); }catch(e){ done(null); } });
+      }
+      if(!m) return finish(null);
+      return new Promise(function(done){ var lg=new Image(); lg.onload=function(){ done(finish(lg)); }; lg.onerror=function(){ done(finish(null)); }; lg.src=m[1]; });
+    }).catch(function(){ return null; });
+  }
+  function shareCard(it,name,btn){
+    var label=btn.textContent; btn.disabled=true; btn.textContent='...';
+    function done(m){ btn.disabled=false; btn.textContent=m||label; if(m) setTimeout(function(){btn.textContent=label},2500); }
+    var o0=it.kind==='obs'?it.o:null, sci=o0?binom(o0.sci):(binom((obs.filter(function(o){return key(o)===it.x.key})[0]||{}).sci)||'');
+    var place=o0&&o0.place?o0.place.split(',')[0]:'';
+    makeCard(it.pic,name,sci,it.date,place).then(function(blob){
+      if(!blob){ btn.disabled=false; btn.textContent=label; sharePicture(it.pic,name,btn); return; }
+      var fname=name.replace(/[^\w\- ]+/g,'')+'.png', file=new File([blob],fname,{type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file],title:name}).then(function(){done()},function(){done()});
+      else { var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000); done('Saved'); }
+    });
+  }
+
   /* share a picture with the phone's share menu */
   function sharePicture(o,name,btn){
     var label=btn.textContent; btn.disabled=true; btn.textContent='...';
@@ -801,9 +960,19 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     function again(){ closeSheet(); render(); }
     var g=h('div',{class:'gallery'});
     g.appendChild(backLink());
-    g.appendChild(h('div',null,
-      h('h2',{class:'gtitle'},name),
-      sci&&sci!==name?h('div',{class:'sci'},sci):null));
+    var hcv=coverOf(k), htx=taxonOf(k);
+    if(hcv){
+      g.appendChild(h('div',{class:'hero'},
+        pic(hcv.pic),
+        h('div',{class:'heroin'},
+          htx?h('div',{class:'herocat'},catIcon(htx),TAXA[htx]||htx):null,
+          h('h2',{class:'gtitle'},name),
+          sci&&sci!==name?h('div',{class:'sci'},sci):null)));
+    } else {
+      g.appendChild(h('div',null,
+        h('h2',{class:'gtitle'},name),
+        sci&&sci!==name?h('div',{class:'sci'},sci):null));
+    }
     var own=all.filter(function(o){return !DATAIDS[o.id]});
     if(own.length){
       var cur=own[0].taxon||'';
@@ -847,7 +1016,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       function ask(){
         act.textContent=''; act.className='gact';
         var shb=h('button',{class:'btn quiet sm',type:'button'},'Share');
-        shb.addEventListener('click',function(){ sharePicture(it.pic,name,shb); });
+        shb.addEventListener('click',function(){ shareCard(it,name,shb); });
         act.appendChild(shb);
         var rm=h('button',{class:'btn quiet sm',type:'button'},'Remove');
         rm.addEventListener('click',function(){
@@ -2590,7 +2759,7 @@ return {make:function(t){var q=new (req('./index'))(-1,req('./QRErrorCorrectLeve
 
   /* start with the imported sightings, then use saved edits if there are any */
   obs=DATA.map(fixName); route(true);
-  Promise.all([get('obs'),get('extras'),get('covers'),get('names'),get('notes'),get('favs'),get('videos')]).then(function(r){
+  Promise.all([get('obs'),get('extras'),get('covers'),get('names'),get('notes'),get('favs'),get('videos'),get('prefView')]).then(function(r){
     if(r[0]&&r[0].length) obs=r[0].map(fixName);
     if(r[1]&&r[1].length) extras=r[1];
     if(r[2]) covers=r[2];
@@ -2598,6 +2767,7 @@ return {make:function(t){var q=new (req('./index'))(-1,req('./QRErrorCorrectLeve
     if(r[4]) notes=r[4];
     if(r[5]) favs=r[5];
     if(r[6]) videos=r[6];
+    if(r[7]==='grid') state.view='grid';
     try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(function(){}); }catch(e){}
     ready=true; route(true); startSync();
   });
