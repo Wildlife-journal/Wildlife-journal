@@ -127,6 +127,7 @@ h1{font-family:var(--sans); font-weight:700; font-size:14px; line-height:1.2; le
 .panel .btnrow .btn{flex:1 1 140px}
 .panel a{color:var(--ink); text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:4px; font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; align-self:center; padding:0 6px}
 .field{display:flex; flex-direction:column; gap:6px}
+.field select{border:1px solid var(--gold); background:var(--paper); padding:11px 12px; min-height:48px; width:100%; font:inherit; color:inherit; border-radius:0}
 .field input{border:1px solid var(--gold); background:var(--paper); padding:11px 12px; min-height:48px; width:100%}
 .note{color:var(--muted); font-family:var(--serif); font-style:italic; margin:0}
 input[type=file]{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none}
@@ -238,6 +239,14 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
 (function(){
   var $=function(s){return document.querySelector(s)};
   var TAXA={Aves:'Birds',Mammalia:'Mammals',Reptilia:'Reptiles',Amphibia:'Amphibians',Insecta:'Insects',Arachnida:'Arachnids',Plantae:'Plants',Fungi:'Fungi',Mollusca:'Molluscs',Actinopterygii:'Fish',Animalia:'Other animals',Chromista:'Chromista',Protozoa:'Protozoa'};
+  var CATS=[['Aves','Bird'],['Mammalia','Mammal'],['Reptilia','Reptile'],['Amphibia','Amphibian'],['Insecta','Insect'],['Arachnida','Arachnid'],['Actinopterygii','Fish'],['Plantae','Plant'],['Animalia','Other']];
+  function catSelect(id,value,onchange){
+    var sel=h('select',{id:id});
+    sel.appendChild(h('option',{value:''},'Choose a category'));
+    CATS.forEach(function(c){ var op=h('option',{value:c[0]},c[1]); if(c[0]===value) op.selected=true; sel.appendChild(op); });
+    if(onchange) sel.addEventListener('change',function(){ onchange(sel.value); });
+    return sel;
+  }
   /* English names (iNaturalist gave some in Spanish or local languages) */
   var EN={
     'Pteroglossus frantzii':'Fiery-billed Aracari','Penelope purpurascens':'Crested Guan','Trogon caligatus':'Gartered Trogon',
@@ -670,6 +679,14 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     g.appendChild(h('div',null,
       h('h2',{class:'gtitle'},name),
       sci&&sci!==name?h('div',{class:'sci'},sci):null));
+    var own=all.filter(function(o){return !DATAIDS[o.id]});
+    if(own.length){
+      var cur=own[0].taxon||'';
+      g.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'g-cat'},'Category'),catSelect('g-cat',cur,function(t){
+        own.forEach(function(o){ o.taxon=t; });
+        saveObs().then(function(){ render(); });
+      })));
+    }
     g.appendChild(h('p',{class:'note'},all.length+(all.length===1?' sighting':' sightings')+' \u00b7 '+pics.length+(pics.length===1?' picture':' pictures')));
     g.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn solid',type:'button',on:{click:function(){
@@ -816,6 +833,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     f.appendChild(field('f-sci','Scientific name (optional)'));
     f.appendChild(field('f-date','Date',{type:'date',value:today()}));
     f.appendChild(field('f-place','Place'));
+    f.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'f-cat'},'Category'),catSelect('f-cat','')));
     f.appendChild(h('div',{class:'btnrow'},
       h('button',{class:'btn',type:'button',on:{click:function(){pickPhoto(function(d){photoData=d;status.textContent='Photo ready.'})}}},'Choose photo'),status));
     f.appendChild(h('div',{class:'btnrow'},
@@ -825,7 +843,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       e.preventDefault();
       var common=$('#f-common').value.trim(), sci=$('#f-sci').value.trim();
       if(!common && !sci){ status.textContent='Enter a name first.'; $('#f-common').focus(); return; }
-      var o={id:'own-'+Date.now(),date:$('#f-date').value,place:$('#f-place').value.trim(),sci:sci,common:common||sci,taxon:'',hasPhoto:!!photoData};
+      var o={id:'own-'+Date.now(),date:$('#f-date').value,place:$('#f-place').value.trim(),sci:sci,common:common||sci,taxon:$('#f-cat').value,hasPhoto:!!photoData};
       if(isSample){obs=[];isSample=false;$('#notice').dataset.msg='';$('#notice').hidden=true;}
       obs.push(o);
       (photoData?put('photo:'+o.id,photoData).then(function(){photoCache[o.id]=photoData}):Promise.resolve()).then(saveObs).then(function(){closeSheet();render()});
