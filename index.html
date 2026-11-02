@@ -521,6 +521,83 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   }
   function taxonOf(k){ var f=obs.filter(function(o){return key(o)===k && o.taxon})[0]; return f?f.taxon:''; }
 
+
+  /* photos shared from the phone gallery ("Save to Wildlife") */
+  function readShared(){
+    if(!('caches' in window)) return Promise.resolve([]);
+    return caches.open('wj-share').then(function(c){
+      return c.keys().then(function(ks){
+        ks.sort(function(a,b){ return a.url.localeCompare(b.url,undefined,{numeric:true}); });
+        return Promise.all(ks.map(function(rq){ return c.match(rq).then(function(r){ return r.blob().then(function(b){ return {blob:b,time:Number(r.headers.get('X-Last-Modified'))||0}; }); }); }));
+      });
+    }).catch(function(){ return []; });
+  }
+  function clearShared(){ return ('caches' in window)?caches.delete('wj-share').catch(function(){}):Promise.resolve(); }
+  function checkShared(){
+    var fromShare=/[?&]shared=1/.test(location.search);
+    readShared().then(function(list){
+      if(fromShare) history.replaceState(null,'',location.pathname+location.hash);
+      if(list.length) openSharedSheet(list);
+    });
+  }
+  function dayOf(t){
+    if(!t || t>Date.now()+86400000 || t<946684800000) return today();
+    var d=new Date(t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function openSharedSheet(list){
+    var p=$('#panel'); p.textContent='';
+    var urls=[];
+    p.appendChild(h('h2',null,'Save to Wildlife'));
+    p.appendChild(h('p',{class:'note'},list.length+(list.length===1?' photo':' photos')+' received. Which animal is it?'));
+    var strip=h('div',{style:'display:flex;gap:8px;overflow-x:auto;padding-bottom:4px'});
+    list.slice(0,8).forEach(function(it){
+      var u=URL.createObjectURL(it.blob); urls.push(u);
+      strip.appendChild(h('img',{src:u,alt:'',style:'width:72px;height:72px;object-fit:cover;flex:none;border:1px solid var(--line)'}));
+    });
+    p.appendChild(strip);
+    var dl=h('datalist',{id:'sh-list'});
+    var seen={}; obs.forEach(function(o){ var k=key(o); if(seen[k]) return; seen[k]=1; dl.appendChild(h('option',{value:nameOf(k)})); });
+    var inp=h('input',{id:'sh-name',type:'text',autocomplete:'off',list:'sh-list',placeholder:'Type a name or pick one'});
+    p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'sh-name'},'Animal'),inp,dl));
+    p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'sh-cat'},'Category (for a new animal)'),catSelect('sh-cat','')));
+    var st=h('p',{class:'note'},'');
+    p.appendChild(st);
+    function done(){ urls.forEach(function(u){URL.revokeObjectURL(u)}); }
+    var save=h('button',{class:'btn solid',type:'button'},'Save');
+    var cancel=h('button',{class:'btn quiet',type:'button'},'Cancel');
+    p.appendChild(h('div',{class:'btnrow'},save,cancel));
+    cancel.addEventListener('click',function(){ done(); clearShared().then(closeSheet); });
+    save.addEventListener('click',function(){
+      var val=inp.value.trim(); if(!val){ st.textContent='Type the animal name first.'; inp.focus(); return; }
+      save.disabled=true; st.textContent='Saving...';
+      var low=val.toLowerCase(), match=null;
+      Object.keys(obs.reduce(function(m,o){m[key(o)]=1;return m},{})).forEach(function(k){
+        if(match) return;
+        var f=obs.filter(function(o){return key(o)===k})[0]||{};
+        if([nameOf(k),k,names[k]||'',f.common||'',f.sci||''].some(function(x){return x && x.toLowerCase()===low})) match=k;
+      });
+      var cat=$('#sh-cat').value, base=Date.now(), datas=[];
+      list.reduce(function(pr,it){ return pr.then(function(){ return shrink(new File([it.blob],'photo.jpg',{type:it.blob.type||'image/jpeg'})).then(function(d){ datas.push({d:d,day:dayOf(it.time)}); },function(){}); }); },Promise.resolve()).then(function(){
+        if(!datas.length){ st.textContent='These files could not be read as photos.'; save.disabled=false; return; }
+        var k=match, jobs=[], first=0, name=val;
+        if(!k){
+          var o={id:'own-'+base,date:datas[0].day,place:'',sci:'',common:val,taxon:cat,hasPhoto:true};
+          if(isSample){ obs=[]; isSample=false; $('#notice').dataset.msg=''; $('#notice').hidden=true; }
+          obs.push(o); k=key(o); first=1;
+          jobs.push(put('photo:'+o.id,datas[0].d).then(function(){ photoCache[o.id]=datas[0].d; }));
+        } else name=nameOf(k);
+        datas.slice(first).forEach(function(x,i){
+          var id='x-'+base+'-'+i;
+          jobs.push(put('photo:'+id,x.d).then(function(){ photoCache[id]=x.d; extras.push({id:id,key:k,date:x.day}); }));
+        });
+        return Promise.all(jobs).then(function(){ return Promise.all([saveObs(),saveExtras()]); }).then(clearShared).then(function(){
+          done(); closeSheet(); go(k); say(datas.length+(datas.length===1?' photo':' photos')+' saved to '+name+'.');
+        });
+      });
+    });
+    openSheet();
+  }
+
   /* delete a whole animal with its pictures, videos, notes and name */
   function askDeleteAnimal(k,name){
     var p=$('#panel'); p.textContent='';
@@ -2741,7 +2818,7 @@ return {make:function(t){var q=new (req('./index'))(-1,req('./QRErrorCorrectLeve
     if(r[6]) videos=r[6];
     if(r[7]==='grid') state.view='grid';
     try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(function(){}); }catch(e){}
-    ready=true; route(true); startSync();
+    ready=true; route(true); startSync(); checkShared();
   });
 })();
 </script>
