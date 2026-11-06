@@ -1,4 +1,4 @@
-const CACHE='wildlife-journal-v24';
+const CACHE='wildlife-journal-v25';
 const SHELL=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 const REMOTE=['static.inaturalist.org','fonts.googleapis.com','fonts.gstatic.com'];
 
