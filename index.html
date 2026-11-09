@@ -294,14 +294,44 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
 (function(){
   var $=function(s){return document.querySelector(s)};
   var TAXA={Aves:'Birds',Mammalia:'Mammals',Reptilia:'Reptiles',Amphibia:'Amphibians',Insecta:'Insects',Arachnida:'Arachnids',Plantae:'Plants',Fungi:'Fungi',Mollusca:'Molluscs',Actinopterygii:'Fish',Animalia:'Other animals',Chromista:'Chromista',Protozoa:'Protozoa'};
-  var CATS=[['Aves','Bird'],['Mammalia','Mammal'],['Reptilia','Reptile'],['Amphibia','Amphibian'],['Insecta','Insect'],['Arachnida','Arachnid'],['Actinopterygii','Fish'],['Plantae','Plant'],['Fungi','Fungus'],['Mollusca','Mollusc'],['Animalia','Other']];
+  var CATS=[['Aves','Bird (toucans, parrots, owls)'],['Mammalia','Mammal (monkeys, sloths, bats)'],['Reptilia','Reptile (snakes, lizards, turtles)'],['Amphibia','Amphibian (frogs, toads)'],['Insecta','Insect (butterflies, beetles, bees)'],['Arachnida','Arachnid (spiders, scorpions)'],['Actinopterygii','Fish (and sharks, rays)'],['Plantae','Plant (trees, flowers)'],['Fungi','Fungus (mushrooms)'],['Mollusca','Mollusc (snails, slugs)'],['Animalia','Other (crabs, worms, jellyfish)']];
   function catSelect(id,value,onchange){
     var sel=h('select',{id:id});
     sel.appendChild(h('option',{value:''},'Choose a category'));
     CATS.forEach(function(c){ var op=h('option',{value:c[0]},c[1]); if(c[0]===value) op.selected=true; sel.appendChild(op); });
-    if(onchange) sel.addEventListener('change',function(){ onchange(sel.value); });
+    sel.addEventListener('change',function(){ sel.dataset.touched='1'; if(onchange) onchange(sel.value); });
     return sel;
   }
+  /* guess the category from the name (the last word of an English name is usually the animal) */
+  var CATWORDS={
+    Aves:'bird toucan toucanet aracari macaw parrot parakeet parrotlet owl hawk kite eagle vulture caracara falcon hummingbird tanager trogon quetzal woodpecker heron egret ibis spoonbill jabiru stork kingfisher motmot oropendola cacique flycatcher kiskadee warbler wren thrush dove pigeon guan chachalaca curassow tinamou jacamar manakin honeycreeper dacnis swallow swift pelican booby frigatebird tern gull sandpiper plover anhinga cormorant duck jacana grackle oriole finch sparrow euphonia seedeater bananaquit potoo nightjar puffbird barbet antbird becard tityra vireo tucan lapa loro lora pajaro ave buho lechuza gavilan zopilote colibri garza pavon',
+    Mammalia:'mammal monkey capuchin howler tamarin marmoset sloth armadillo anteater coati agouti paca tapir peccary deer opossum possum squirrel rat mouse bat jaguar ocelot margay puma cougar cat dog coyote fox otter kinkajou olingo tayra weasel porcupine manatee dolphin whale raccoon rabbit mono perezoso venado ardilla raton murcielago tigrillo guatusa saino cariblanco tepezcuintle pizote mapache zorro nutria danta oso armadilo',
+    Reptilia:'reptile snake lizard iguana gecko anole basilisk turtle tortoise boa viper python crocodile caiman cayman alligator skink whiptail ameiva garrobo ctenosaur bushmaster terciopelo culebra serpiente tortuga lagartija lagarto cocodrilo basilisco salamanquesa',
+    Amphibia:'amphibian frog treefrog toad salamander caecilian newt rana ranita sapo',
+    Insecta:'insect butterfly moth beetle bee bumblebee wasp hornet ant fly mosquito grasshopper cricket katydid cicada mantis dragonfly damselfly bug aphid termite cockroach firefly ladybug weevil caterpillar larva morpho heliconian swallowtail skipper walkingstick mariposa polilla escarabajo abeja avispa hormiga mosca saltamontes chapulin cigarra libelula grillo zancudo',
+    Arachnida:'arachnid spider tarantula scorpion harvestman tick mite vinegaroon arana escorpion opilion',
+    Actinopterygii:'fish shark ray stingray eel moray tuna snapper grouper angelfish pufferfish puffer seahorse barracuda dorado guppy tilapia catfish cichlid tetra pez tiburon raya',
+    Plantae:'plant tree flower orchid bromeliad fern palm vine grass shrub bush moss lily heliconia ginger bamboo cactus ceiba cecropia arbol planta flor orquidea',
+    Fungi:'fungus fungi mushroom toadstool puffball hongo seta',
+    Mollusca:'snail slug clam oyster mussel octopus squid mollusc mollusk caracol babosa pulpo',
+    Animalia:'crab shrimp crayfish lobster worm earthworm jellyfish starfish urchin centipede millipede sponge cangrejo camaron gusano ciempies milpies'
+  };
+  var WORDCAT={};
+  Object.keys(CATWORDS).forEach(function(c){ CATWORDS[c].split(' ').forEach(function(w){ if(w) WORDCAT[w]=c; }); });
+  function wordCat(w){
+    if(WORDCAT[w]) return WORDCAT[w];
+    var c=[w.replace(/ies$/,'y'),w.replace(/es$/,''),w.replace(/s$/,'')];
+    for(var i=0;i<c.length;i++) if(c[i]!==w && WORDCAT[c[i]]) return WORDCAT[c[i]];
+    return '';
+  }
+  function guessCat(text){
+    var ws=fold(text).replace(/[^a-z\s-]/g,' ').split(/[\s-]+/).filter(Boolean);
+    if(!ws.length) return '';
+    var order=[ws[ws.length-1],ws[0]].concat(ws.slice(0,-1).reverse());
+    for(var i=0;i<order.length;i++){ var c=wordCat(order[i]); if(c) return c; }
+    return '';
+  }
+
   /* English names (iNaturalist gave some in Spanish or local languages) */
   var EN={
     'Pteroglossus frantzii':'Fiery-billed Aracari','Penelope purpurascens':'Crested Guan','Trogon caligatus':'Gartered Trogon',
@@ -628,7 +658,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'sh-name'},'Animal'),h('div',{class:'shq'},inp,pasteBtn)));
     var res=h('div',null), sug=h('div',null), man=h('div',null);
     p.appendChild(res); p.appendChild(sug); p.appendChild(man);
-    p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'sh-cat'},'Category (only for a new animal you type yourself)'),catSelect('sh-cat','')));
+    p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'sh-cat'},'Category (filled in from the name, change it if wrong)'),catSelect('sh-cat','')));
     p.appendChild(st);
     var cancel=h('button',{class:'btn quiet',type:'button'},'Cancel');
     p.appendChild(h('div',{class:'btnrow'},cancel));
@@ -643,6 +673,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       clearTimeout(sTimer); if(sCtl){ sCtl.abort(); sCtl=null; }
       res.textContent=''; sug.textContent=''; man.textContent=''; st.textContent='';
       var q=inp.value.trim();
+      var scs=$('#sh-cat'); if(scs && scs.dataset.touched!=='1') scs.value=guessCat(q);
       if(!q) return;
       var all={}; obs.forEach(function(o){ all[key(o)]=1; });
       var ks=findAnimals(q);
@@ -653,7 +684,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       }
       if(q.length>=2){
         man.appendChild(h('div',{style:'margin-top:12px'},h('button',{class:'btn quiet',type:'button',on:{click:function(){
-          var t=inp.value.trim(); if(t) saveTo({nw:{common:t,sci:'',cat:$('#sh-cat').value}});
+          var t=inp.value.trim(); if(t) saveTo({nw:{common:t,sci:'',cat:$('#sh-cat').value||guessCat(t)}});
         }}},'Add \u201c'+q+'\u201d as a new animal')));
       }
       if(q.length<3) return;
@@ -1346,6 +1377,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     nameInp.addEventListener('input',function(){
       acStop(); picked=null; acNote.textContent=''; acBox.textContent='';
       var q=nameInp.value.trim();
+      var gcs=$('#f-cat'); if(gcs && gcs.dataset.touched!=='1') gcs.value=guessCat(q);
       if(q.length<3) return;
       acTimer=setTimeout(function(){
         var ctl=new AbortController(); acCtl=ctl;
@@ -1382,7 +1414,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       e.preventDefault();
       var common=$('#f-common').value.trim(), sci=$('#f-sci').value.trim();
       if(!common && !sci){ status.textContent='Enter a name first.'; $('#f-common').focus(); return; }
-      var o={id:'own-'+Date.now(),date:$('#f-date').value,place:$('#f-place').value.trim(),sci:sci,common:common||sci,taxon:$('#f-cat').value,hasPhoto:!!photoData};
+      var o={id:'own-'+Date.now(),date:$('#f-date').value,place:$('#f-place').value.trim(),sci:sci,common:common||sci,taxon:$('#f-cat').value||guessCat(common||sci),hasPhoto:!!photoData};
       if(picked && picked.sci && sci===picked.sci){
         if(picked.id) o.url='https://www.inaturalist.org/taxa/'+picked.id;
         if(picked.image) o.image=picked.image;
