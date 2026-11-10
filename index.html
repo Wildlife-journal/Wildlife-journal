@@ -1388,39 +1388,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     done.then(function(){render()});
   }
 
-  function shareCard(o){
-    var W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H;
-    var x=c.getContext('2d'), name=names[key(o)]||o.common||o.sci||'Unknown';
-    x.fillStyle='#FAF7F2'; x.fillRect(0,0,W,H);
-    x.strokeStyle='#A98C55'; x.lineWidth=3; x.strokeRect(30,30,W-60,H-60); x.lineWidth=1.5; x.strokeRect(48,48,W-96,H-96);
-    function text(t,y,font,color,sp){ x.font=font; x.fillStyle=color; x.textAlign='center'; if('letterSpacing' in x) x.letterSpacing=sp||'0px'; x.fillText(t,W/2,y); }
-    function fit(t,font,max){ x.font=font; while(x.measureText(t).width>max && t.length>3) t=t.slice(0,-2); return t; }
-    function finish(){
-      text(fit(name,'italic 600 64px Georgia,serif',W-200),1080,'600 64px Georgia,serif','#1F1C18');
-      if(o.sci&&o.sci!==name) text(fit(o.sci,'italic 40px Georgia,serif',W-200),1140,'italic 40px Georgia,serif','#6B6256');
-      var line=fmt(o.date)+(o.place?'  ·  '+o.place:'');
-      text(fit(line,'30px sans-serif',W-200),1210,'30px sans-serif','#6B6256');
-      text('WILDLIFE JOURNAL',1290,'700 24px sans-serif','#A98C55','6px');
-      c.toBlob(function(b){
-        if(!b){ say('Could not make the card.'); return; }
-        var f=new File([b],'sighting-card.png',{type:'image/png'});
-        if(navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],title:name}).catch(function(){}); }
-        else { var u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u; a.download='sighting-card.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); say('Card saved.'); }
-      },'image/png');
-    }
-    function draw(im){
-      var bx=96,by=96,bw=W-192,bh=900, r=Math.max(bw/im.width,bh/im.height), w=im.width*r, hh=im.height*r;
-      x.save(); x.beginPath(); x.rect(bx,by,bw,bh); x.clip(); x.drawImage(im,bx+(bw-w)/2,by+(bh-hh)/2,w,hh); x.restore();
-    }
-    var cov=coverItem(o), src=cov&&cov.pic, done=false;
-    function noPhoto(){ if(done) return; done=true; x.fillStyle='#EFE7DA'; x.fillRect(96,96,W-192,900); finish(); }
-    function load(u,cors){ var im=new Image(); if(cors) im.crossOrigin='anonymous'; im.onload=function(){ if(done) return; done=true; try{ draw(im); finish(); }catch(e){ done=false; noPhoto(); } }; im.onerror=noPhoto; im.src=cors?u+(u.indexOf('?')<0?'?':'&')+'cors=1':u; }
-    if(!src) return noPhoto();
-    if(src.hasPhoto) getPhoto(src.id).then(function(d){ if(d) load(d,false); else if(src.image) load(src.image,true); else noPhoto(); });
-    else if(src.image) load(src.image,true);
-    else noPhoto();
-  }
-
   function openDetail(id){
     var o=obs.filter(function(x){return x.id===id})[0]; if(!o) return;
     var p=$('#panel'); p.textContent='';
@@ -1451,7 +1418,6 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
         });
       }}},o.hasPhoto?'Replace my photo':'Add my photo'));
       row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ editSighting(o); }}},'Edit'));
-      row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ shareCard(o); }}},'Share card'));
       if(hasPic) row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ cropPicture({kind:'obs',o:o},function(){openDetail(o.id)}); }}},'Crop'));
       if(o.hasPhoto) row.appendChild(h('button',{class:'btn quiet',type:'button',on:{click:function(){
         drop('photo:'+o.id).then(function(){ photoCache[o.id]=null; o.hasPhoto=false; return saveObs(); }).then(function(){render();openDetail(o.id)});
