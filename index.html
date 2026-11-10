@@ -342,7 +342,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     'Sericopelma':'Tarantula','Zammara smaragdula':'Cicada'
   };
   function eng(sci,common){ return EN[sci]||common; }
-  function fixName(o){ if(o.sci&&EN[o.sci]) o.common=EN[o.sci]; return o; }
+  function fixName(o){ if(o.sci&&EN[o.sci]&&!o.edited) o.common=EN[o.sci]; return o; }
   var SAMPLE=[
     {id:'s1',date:'2026-10-11',place:'Uvita, Puntarenas',sci:'Ramphastos ambiguus',common:'Black-mandibled Toucan',taxon:'Aves'},
     {id:'s2',date:'2026-10-04',place:'Ballena National Marine Park',sci:'Ara macao',common:'Scarlet Macaw',taxon:'Aves'},
@@ -1146,6 +1146,96 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     openSheet();
   }
 
+
+  /* edit a sighting: name, scientific name, date, place, category */
+  function editSighting(o){
+    var p=$('#panel'); p.textContent='';
+    var f=h('form',{style:'display:flex;flex-direction:column;gap:14px'});
+    function fld(id,label,val,attrs){
+      var inp=h('input',Object.assign({id:id,type:'text',autocomplete:'off'},attrs||{})); inp.value=val||'';
+      return h('div',{class:'field'},h('label',{class:'label',for:id},label),inp);
+    }
+    var note=h('p',{class:'note'},'Changing the scientific name moves this sighting to that animal.');
+    f.appendChild(h('h2',null,'Edit sighting'));
+    f.appendChild(fld('e-common','Name',o.common));
+    f.appendChild(fld('e-sci','Scientific name',o.sci));
+    f.appendChild(fld('e-date','Date',o.date,{type:'date'}));
+    f.appendChild(fld('e-place','Place',o.place));
+    f.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'e-cat'},'Category'),catSelect('e-cat',o.taxon||'')));
+    f.appendChild(note);
+    f.appendChild(h('div',{class:'btnrow'},
+      h('button',{class:'btn solid',type:'submit'},'Save'),
+      h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Cancel')));
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var common=$('#e-common').value.trim(), sci=$('#e-sci').value.trim();
+      if(!common&&!sci){ note.textContent='Enter a name first.'; return; }
+      var oldK=key(o), wasOn=state.sp===oldK;
+      o.common=common||sci; o.sci=sci; o.date=$('#e-date').value; o.place=$('#e-place').value.trim();
+      o.taxon=$('#e-cat').value||guessCat(common||sci)||o.taxon||''; o.edited=1;
+      var newK=key(o), oldLeft=obs.some(function(x){return key(x)===oldK});
+      if(newK!==oldK && !oldLeft){
+        extras.forEach(function(x){ if(x.key===oldK) x.key=newK; });
+        videos.forEach(function(x){ if(x.key===oldK) x.key=newK; });
+        [names,notes,covers,favs].forEach(function(m){ if(m[oldK]!==undefined){ if(m[newK]===undefined) m[newK]=m[oldK]; delete m[oldK]; } });
+      }
+      Promise.all([saveObs(),saveExtras(),saveNames(),saveNotes(),saveCovers(),saveFavs(),saveVideos()]).then(function(){
+        closeSheet();
+        if(wasOn && newK!==oldK && !oldLeft) go(newK); else render();
+      });
+    });
+    p.appendChild(f); openSheet();
+  }
+
+  /* fetch new observations from iNaturalist (public API, no key) */
+  function inatMap(r){
+    var t=r.taxon||{}, sci=t.name||'', ph=(r.photos&&r.photos[0]&&r.photos[0].url)||'';
+    var ll=String(r.location||'').split(',');
+    return {id:'inat-'+r.id,date:r.observed_on||String(r.time_observed_at||'').slice(0,10),
+      place:String(r.place_guess||'').replace(/^[A-Z0-9]{4,8}\+[A-Z0-9]{2,3},\s*/,''),
+      lat:ll[0]||'',lon:ll[1]||'',sci:sci,common:eng(sci,t.preferred_common_name||sci||'Unidentified'),
+      taxon:t.iconic_taxon_name||'',image:safeUrl(ph.replace('/square.','/medium.')),
+      url:r.uri||('https://www.inaturalist.org/observations/'+r.id)};
+  }
+  function inatApi(url){
+    var ctl=new AbortController(), t=setTimeout(function(){ ctl.abort(); },15000);
+    return fetch(url,{signal:ctl.signal}).then(function(r){ clearTimeout(t); if(!r.ok) throw new Error('iNaturalist answered '+r.status); return r.json(); },function(e){ clearTimeout(t); throw e; });
+  }
+  function fetchInat(user,progress){
+    user=String(user||'').trim().replace(/^@/,'');
+    if(!user) return Promise.reject(new Error('Type your iNaturalist username.'));
+    var have={}, maxId=0, added=[], page=0, updated=0;
+    obs.forEach(function(o){ have[o.id]=1; var m=/^inat-(\d+)$/.exec(o.id); if(m&&+m[1]>maxId) maxId=+m[1]; });
+    function next(){
+      page++; progress('Fetching new sightings...');
+      return inatApi('https://api.inaturalist.org/v1/observations?user_id='+encodeURIComponent(user)+'&order_by=id&order=asc&per_page=200&locale=en&id_above='+maxId).then(function(j){
+        var rs=j.results||[];
+        rs.forEach(function(r){ if(r.id>maxId) maxId=r.id; var id='inat-'+r.id; if(!have[id]){ have[id]=1; added.push(inatMap(r)); } });
+        if(rs.length>=200 && page<10) return next();
+      });
+    }
+    /* sightings that had no identification may have one now */
+    function refreshUnid(){
+      var list=obs.filter(function(o){ return /^inat-\d+$/.test(o.id) && !o.sci && !o.edited && !o.sample; });
+      var chunks=[]; for(var i=0;i<list.length;i+=100) chunks.push(list.slice(i,i+100));
+      return chunks.reduce(function(pr,ch){
+        return pr.then(function(){
+          return inatApi('https://api.inaturalist.org/v1/observations/'+ch.map(function(o){return o.id.slice(5)}).join(',')+'?locale=en').then(function(j){
+            (j.results||[]).forEach(function(r){
+              if(!r.taxon) return;
+              var n=inatMap(r), o=ch.filter(function(x){return x.id===n.id})[0];
+              if(o && n.sci){ o.sci=n.sci; o.common=n.common; o.taxon=n.taxon; updated++; }
+            });
+          });
+        });
+      },Promise.resolve());
+    }
+    return next().then(refreshUnid).then(function(){
+      if(added.length){ if(isSample){ obs=[]; isSample=false; } obs=obs.concat(added); }
+      return Promise.all([put('inatUser',user),(added.length||updated)?saveObs():Promise.resolve()]);
+    }).then(function(){ return {n:added.length,u:updated}; });
+  }
+
   function openRename(k,current){
     var p=$('#panel'); p.textContent='';
     var f=h('form',{style:'display:flex;flex-direction:column;gap:14px'});
@@ -1257,6 +1347,14 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       vids.forEach(function(x){ g.appendChild(videoItem(x)); });
       g.appendChild(h('p',{class:'note'},'Videos stay on this phone. They are not part of backups or sync.'));
     }
+    g.appendChild(sec('Sightings'));
+    var sl=h('div',null);
+    all.forEach(function(o){
+      sl.appendChild(h('div',{class:'row',style:'cursor:default'},
+        h('span',{class:'grow'},h('span',{class:'meta'},fmt(o.date)+(o.place?' \u00b7 '+o.place:''))),
+        o.sample?null:h('button',{class:'btn quiet sm',type:'button',on:{click:function(){ editSighting(o); }}},'Edit')));
+    });
+    g.appendChild(sl);
     g.appendChild(sec('Notes'));
     var ta=h('textarea',{class:'notes',rows:'4','aria-label':'Notes about '+name,placeholder:'Where you see it, behaviour, calls\u2026'});
     ta.value=notes[k]||'';
@@ -1311,6 +1409,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
           put('photo:'+o.id,data).then(function(){ photoCache[o.id]=data; o.hasPhoto=true; o.noPic=false; return saveObs(); }).then(function(){render();openDetail(o.id)});
         });
       }}},o.hasPhoto?'Replace my photo':'Add my photo'));
+      row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ editSighting(o); }}},'Edit'));
       if(hasPic) row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ cropPicture({kind:'obs',o:o},function(){openDetail(o.id)}); }}},'Crop'));
       if(o.hasPhoto) row.appendChild(h('button',{class:'btn quiet',type:'button',on:{click:function(){
         drop('photo:'+o.id).then(function(){ photoCache[o.id]=null; o.hasPhoto=false; return saveObs(); }).then(function(){render();openDetail(o.id)});
@@ -1520,7 +1619,22 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     p.appendChild(qrow); p.appendChild(qbox);
     p.appendChild(h('p',{class:'note'},'Anyone who knows your key can see and change your journal, so choose one nobody can guess and share it only with people you trust.'));
     p.appendChild(sec('iNaturalist'));
-    p.appendChild(h('div',{class:'btnrow'},
+    var uin=h('input',{id:'inat-user',type:'text',autocomplete:'off',autocapitalize:'none',spellcheck:'false',value:'francois96371','aria-label':'iNaturalist username'});
+    get('inatUser').then(function(v){ if(v) uin.value=v; });
+    var ist=h('p',{class:'note'},'Adds your new observations from iNaturalist, with their pictures, and updates sightings that were unidentified. Nothing is removed.');
+    p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'inat-user'},'iNaturalist username'),uin));
+    p.appendChild(ist);
+    var fbtn=h('button',{class:'btn solid',type:'button'},'Fetch new sightings');
+    fbtn.addEventListener('click',function(){
+      fbtn.disabled=true;
+      fetchInat(uin.value,function(t){ ist.textContent=t; }).then(function(r){
+        var msg=(r.n||r.u)?(r.n+(r.n===1?' new sighting':' new sightings')+(r.u?', '+r.u+(r.u===1?' identification':' identifications')+' updated':'')+'.'):'Nothing new on iNaturalist.';
+        ist.textContent=msg; say(msg); render();
+      }).catch(function(e){
+        ist.textContent=(e&&e.name==='AbortError')?'iNaturalist did not answer. Check your connection and try again.':((e&&e.message)||'Could not reach iNaturalist.');
+      }).then(function(){ fbtn.disabled=false; });
+    });
+    p.appendChild(h('div',{class:'btnrow'},fbtn,
       h('button',{class:'btn',type:'button',on:{click:function(){ closeSheet(); $('#csv').click(); }}},'Import iNaturalist file')));
     p.appendChild(h('div',{class:'btnrow'},h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Close')));
     openSheet();
@@ -1605,6 +1719,8 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   var SYNC_KINDS=['names','notes','covers','extras','obsx','favs'];
   var sync={key:'',snap:{},pv:{},dirty:{},busy:null,again:false,timer:null,last:'',err:'',suppress:false,photoMsg:''};
   var DATAIDS={}; DATA.forEach(function(o){DATAIDS[o.id]=1});
+  var EDF=['date','place','sci','common','taxon'], BASE={};
+  DATA.forEach(function(o){ BASE[o.id]=fixName(JSON.parse(JSON.stringify(o))); });
   function kOf(s){ return encodeURIComponent(s).replace(/\./g,'%2E'); }
   function unk(s){ try{return decodeURIComponent(s)}catch(e){return s} }
   function sUrl(p){ return SYNC_DB+'/wildlife/'+encodeURIComponent(kOf(sync.key))+'/'+p+'.json'; }
@@ -1634,6 +1750,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       if(o.sample) return; present[o.id]=1;
       if(DATAIDS[o.id]){
         var p={}; if(o.noPic) p.noPic=1; if(o.hasPhoto) p.hasPhoto=1; if(o.crop) p.crop=o.crop;
+        var b0=BASE[o.id], ed={}; EDF.forEach(function(f){ if((o[f]||'')!==(b0[f]||'')) ed[f]=o[f]||''; }); if(Object.keys(ed).length) p.ed=ed;
         if(Object.keys(p).length) m.obsx[kOf(o.id)]=JSON.stringify(p);
       } else {
         var c={}; Object.keys(o).forEach(function(f){ if(f!=='sample') c[f]=o[f]; });
@@ -1687,8 +1804,9 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       DATA.forEach(function(d){
         var p=patches[d.id]; if(p&&p.deleted) return;
         var o=by[d.id]; if(!o) o=fixName(JSON.parse(JSON.stringify(d)));
-        delete o.noPic; delete o.hasPhoto; delete o.crop;
-        if(p){ if(p.noPic) o.noPic=true; if(p.hasPhoto) o.hasPhoto=true; if(p.crop) o.crop=p.crop; }
+        delete o.noPic; delete o.hasPhoto; delete o.crop; delete o.edited;
+        var b1=BASE[d.id]; EDF.forEach(function(f){ o[f]=b1[f]; });
+        if(p){ if(p.noPic) o.noPic=true; if(p.hasPhoto) o.hasPhoto=true; if(p.crop) o.crop=p.crop; if(p.ed){ Object.keys(p.ed).forEach(function(f){ o[f]=p.ed[f]; }); o.edited=1; } }
         next.push(o);
       });
       fulls.forEach(function(rec){
