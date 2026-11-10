@@ -796,10 +796,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     var tot=0, best=null, bestN=0, withCover=[];
     ks.forEach(function(k){ var n=pictures(k).length; tot+=n; if(n>bestN){bestN=n;best=k;} if(n && !/unidentified|unknown/i.test(nameOf(k))) withCover.push(k); });
     box.appendChild(h('p',{class:'stats'},tot+(tot===1?' picture':' pictures')+' \u00b7 '+newN+' new in '+yr+(best?' \u00b7 most pictures: '+nameOf(best)+' ('+bestN+')':'')));
-    var steps=[25,50,75,100,150,200,300,500,750,1000], goal=steps.filter(function(x){return x>ks.length})[0]||(Math.floor(ks.length/100)+1)*100;
-    box.appendChild(h('div',{class:'goal'},
-      h('p',{class:'stats'},ks.length+' of '+goal+' animals'),
-      h('div',{class:'goalbar',role:'img','aria-label':ks.length+' of '+goal+' animals'},h('i',{style:'width:'+Math.min(100,Math.round(ks.length/goal*100))+'%'}))));
+    box.appendChild(h('p',{class:'stats'},ks.length+(ks.length===1?' animal':' animals')));
     if(withCover.length){
       withCover.sort();
       var seed=0, t=today(); for(var i=0;i<t.length;i++) seed=(seed*31+t.charCodeAt(i))%100003;
@@ -1232,8 +1229,19 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     }
     return next().then(refreshUnid).then(function(){
       if(added.length){ if(isSample){ obs=[]; isSample=false; } obs=obs.concat(added); }
-      return Promise.all([put('inatUser',user),(added.length||updated)?saveObs():Promise.resolve()]);
+      return Promise.all([put('inatUser',user),put('inatLast',Date.now()),(added.length||updated)?saveObs():Promise.resolve()]);
     }).then(function(){ return {n:added.length,u:updated}; });
+  }
+
+  function autoFetch(){
+    Promise.all([get('autoFetch'),get('inatUser'),get('inatLast')]).then(function(r){
+      if(r[0]===false||!r[1]) return;
+      if(r[2]&&Date.now()-r[2]<20*3600*1000) return;
+      if(navigator.onLine===false) return;
+      return fetchInat(r[1],function(){}).then(function(res){
+        if(res.n||res.u){ render(); say(res.n+(res.n===1?' new sighting':' new sightings')+' from iNaturalist.'); }
+      });
+    }).catch(function(){});
   }
 
   function openRename(k,current){
@@ -1380,6 +1388,39 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     done.then(function(){render()});
   }
 
+  function shareCard(o){
+    var W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H;
+    var x=c.getContext('2d'), name=names[key(o)]||o.common||o.sci||'Unknown';
+    x.fillStyle='#FAF7F2'; x.fillRect(0,0,W,H);
+    x.strokeStyle='#A98C55'; x.lineWidth=3; x.strokeRect(30,30,W-60,H-60); x.lineWidth=1.5; x.strokeRect(48,48,W-96,H-96);
+    function text(t,y,font,color,sp){ x.font=font; x.fillStyle=color; x.textAlign='center'; if('letterSpacing' in x) x.letterSpacing=sp||'0px'; x.fillText(t,W/2,y); }
+    function fit(t,font,max){ x.font=font; while(x.measureText(t).width>max && t.length>3) t=t.slice(0,-2); return t; }
+    function finish(){
+      text(fit(name,'italic 600 64px Georgia,serif',W-200),1080,'600 64px Georgia,serif','#1F1C18');
+      if(o.sci&&o.sci!==name) text(fit(o.sci,'italic 40px Georgia,serif',W-200),1140,'italic 40px Georgia,serif','#6B6256');
+      var line=fmt(o.date)+(o.place?'  ·  '+o.place:'');
+      text(fit(line,'30px sans-serif',W-200),1210,'30px sans-serif','#6B6256');
+      text('WILDLIFE JOURNAL',1290,'700 24px sans-serif','#A98C55','6px');
+      c.toBlob(function(b){
+        if(!b){ say('Could not make the card.'); return; }
+        var f=new File([b],'sighting-card.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],title:name}).catch(function(){}); }
+        else { var u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u; a.download='sighting-card.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); say('Card saved.'); }
+      },'image/png');
+    }
+    function draw(im){
+      var bx=96,by=96,bw=W-192,bh=900, r=Math.max(bw/im.width,bh/im.height), w=im.width*r, hh=im.height*r;
+      x.save(); x.beginPath(); x.rect(bx,by,bw,bh); x.clip(); x.drawImage(im,bx+(bw-w)/2,by+(bh-hh)/2,w,hh); x.restore();
+    }
+    var cov=coverItem(o), src=cov&&cov.pic, done=false;
+    function noPhoto(){ if(done) return; done=true; x.fillStyle='#EFE7DA'; x.fillRect(96,96,W-192,900); finish(); }
+    function load(u,cors){ var im=new Image(); if(cors) im.crossOrigin='anonymous'; im.onload=function(){ if(done) return; done=true; try{ draw(im); finish(); }catch(e){ done=false; noPhoto(); } }; im.onerror=noPhoto; im.src=cors?u+(u.indexOf('?')<0?'?':'&')+'cors=1':u; }
+    if(!src) return noPhoto();
+    if(src.hasPhoto) getPhoto(src.id).then(function(d){ if(d) load(d,false); else if(src.image) load(src.image,true); else noPhoto(); });
+    else if(src.image) load(src.image,true);
+    else noPhoto();
+  }
+
   function openDetail(id){
     var o=obs.filter(function(x){return x.id===id})[0]; if(!o) return;
     var p=$('#panel'); p.textContent='';
@@ -1410,6 +1451,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
         });
       }}},o.hasPhoto?'Replace my photo':'Add my photo'));
       row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ editSighting(o); }}},'Edit'));
+      row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ shareCard(o); }}},'Share card'));
       if(hasPic) row.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ cropPicture({kind:'obs',o:o},function(){openDetail(o.id)}); }}},'Crop'));
       if(o.hasPhoto) row.appendChild(h('button',{class:'btn quiet',type:'button',on:{click:function(){
         drop('photo:'+o.id).then(function(){ photoCache[o.id]=null; o.hasPhoto=false; return saveObs(); }).then(function(){render();openDetail(o.id)});
@@ -1624,6 +1666,10 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     var ist=h('p',{class:'note'},'Adds your new observations from iNaturalist, with their pictures, and updates sightings that were unidentified. Nothing is removed.');
     p.appendChild(h('div',{class:'field'},h('label',{class:'label',for:'inat-user'},'iNaturalist username'),uin));
     p.appendChild(ist);
+    var acb=h('input',{id:'auto-fetch',type:'checkbox'});
+    get('autoFetch').then(function(v){ acb.checked=(v!==false); });
+    acb.addEventListener('change',function(){ put('autoFetch',acb.checked); });
+    p.appendChild(h('label',{class:'note',for:'auto-fetch',style:'display:flex;gap:10px;align-items:center'},acb,'Fetch new sightings automatically once a day'));
     var fbtn=h('button',{class:'btn solid',type:'button'},'Fetch new sightings');
     fbtn.addEventListener('click',function(){
       fbtn.disabled=true;
@@ -3172,7 +3218,7 @@ return {make:function(t){var q=new (req('./index'))(-1,req('./QRErrorCorrectLeve
     if(r[7]==='grid') state.view='grid';
     if(r[8]) recent=r[8];
     try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(function(){}); }catch(e){}
-    ready=true; route(true); startSync(); checkShared();
+    ready=true; route(true); startSync(); checkShared(); autoFetch();
   });
 })();
 </script>
