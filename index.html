@@ -204,7 +204,7 @@ input[type=file]{position:absolute; width:1px; height:1px; opacity:0; pointer-ev
 .lbscroll img{margin:auto; max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-in; display:block}
 .lb.zoomed .lbscroll img{max-width:none; max-height:none; width:260%; cursor:zoom-out}
 .lbbar{display:flex; gap:8px; padding:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)); padding-left:max(12px,env(safe-area-inset-left,0px)); padding-right:max(12px,env(safe-area-inset-right,0px))}
-.lbbar .btn{flex:1; border-color:#F3EADF; color:#F3EADF}
+.lbbar .btn{flex:1 1 0; min-width:0; padding-left:4px; padding-right:4px; letter-spacing:.08em; border-color:#F3EADF; color:#F3EADF}
 .lbbar .btn.solid{background:#F3EADF; color:#1A1815}
 /* index + species gallery page */
 .back{display:inline-block; align-self:flex-start; color:var(--ink); font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:5px; padding:12px 0; min-height:44px}
@@ -222,7 +222,7 @@ input[type=file]{position:absolute; width:1px; height:1px; opacity:0; pointer-ev
 textarea.notes{width:100%; min-height:120px; border:1px solid var(--gold); background:var(--paper); padding:12px 14px; font-family:var(--serif); font-size:16px; line-height:1.5; resize:vertical; color:var(--ink); border-radius:0}
 textarea.notes::placeholder{color:var(--muted); font-style:italic}
 .lbcount{position:absolute; top:max(14px,env(safe-area-inset-top,0px)); left:0; right:0; text-align:center; color:#F3EADF; font-size:13px; letter-spacing:.16em; pointer-events:none; text-shadow:0 1px 3px #000}
-.lbbar .btn.nav{flex:0 0 52px; padding-left:0; padding-right:0; font-size:22px; letter-spacing:0; line-height:1}
+.lbbar .btn.nav{flex:0 0 44px; padding-left:0; padding-right:0; font-size:22px; letter-spacing:0; line-height:1}
 /* reference look: light, airy rows */
 .list .row{padding:20px 0}
 .list .cname{font-size:20px; font-weight:400; letter-spacing:0; text-transform:none; margin-top:0; line-height:1.25}
@@ -287,8 +287,8 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
   <div class="lbscroll" id="lbscroll"><img id="lbimg" alt=""></div>
   <div class="lbbar">
     <button class="btn nav" id="lbprev" type="button" aria-label="Previous picture" hidden>&#8249;</button>
-    <button class="btn" id="lbzoom" type="button">Zoom</button>
-    <button class="btn" id="lbcrop" type="button">Crop</button>
+    <button class="btn" id="lbzoom" type="button" hidden>Zoom</button>
+    <button class="btn" id="lbcrop" type="button" hidden>Crop</button>
     <button class="btn nav" id="lbnext" type="button" aria-label="Next picture" hidden>&#8250;</button>
     <button class="btn solid" id="lbclose" type="button">Close</button>
   </div>
