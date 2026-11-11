@@ -188,6 +188,11 @@ input[type=file]{position:absolute; width:1px; height:1px; opacity:0; pointer-ev
 .gact.stack{grid-template-columns:1fr}
 .gact .btn{padding:10px 4px; letter-spacing:.1em}
 .letter{scroll-margin-top:8px}
+.pwrap{position:relative}
+.cstar{position:absolute; top:8px; right:8px; width:40px; height:40px; border-radius:50%; border:1px solid var(--gold); background:rgba(250,247,242,.92); color:var(--gold); font-size:20px; line-height:1; padding:0}
+.pmrow{display:flex; align-items:flex-start; justify-content:space-between; gap:6px}
+.pmrow .meta{flex:1; min-width:0}
+.pmore{flex:none; width:40px; height:40px; border:1px solid var(--line); background:none; font-size:20px; line-height:1; color:var(--ink); padding:0}
 .jump{position:fixed; right:0; top:110px; bottom:84px; width:20px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; z-index:5; background:rgba(250,247,242,.85); touch-action:none}
 .jump button{background:none; border:0; padding:0; font:700 11px/1 var(--sans); color:var(--gold); width:20px; flex:1; min-height:0}
 .cropframe{position:relative; aspect-ratio:4/5; width:min(100%,320px); align-self:center; overflow:hidden; background:#FBF2E9; box-shadow:inset 0 0 0 1px var(--gold); touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none}
@@ -1245,6 +1250,19 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
     }).then(function(){ return {n:added.length,u:updated}; });
   }
 
+  function editPicNote(it){
+    var rec=it.kind==='obs'?it.o:it.x, p=$('#panel'); p.textContent='';
+    var ta=h('textarea',{class:'notes',rows:'5','aria-label':'Note for this picture',placeholder:'About this picture\u2026'}); ta.value=rec.pnote||'';
+    p.appendChild(h('h2',null,'Note'));
+    p.appendChild(ta);
+    p.appendChild(h('div',{class:'btnrow'},
+      h('button',{class:'btn solid',type:'button',on:{click:function(){
+        var val=ta.value.trim(); if(val) rec.pnote=val; else delete rec.pnote;
+        (it.kind==='obs'?saveObs():saveExtras()).then(function(){ closeSheet(); render(); });
+      }}},'Save'),
+      h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Cancel')));
+    openSheet();
+  }
   function lc(s){ return (s||'').trim().toLowerCase(); }
   /* a sighting with only an English name joins the animal that has the same name */
   function mergeNames(){
@@ -1340,7 +1358,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       })));
     }
     g.appendChild(h('p',{class:'note'},all.length+(all.length===1?' sighting':' sightings')+' \u00b7 '+pics.length+(pics.length===1?' picture':' pictures')));
-    g.appendChild(h('div',{class:'btnrow'},
+    var topBtns=[
       h('button',{class:'btn solid',type:'button',on:{click:function(){
         pickPhotos(function(list){
           var base=Date.now();
@@ -1362,7 +1380,14 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       h('a',{class:'btn',style:'text-decoration:none',href:'#',target:'_blank',rel:'noopener noreferrer',on:{click:function(e){
         var q='Tell me about this animal from Costa Rica: '+name+(sci&&sci!==name?' ('+sci+')':'')+'. How do I recognise it, what does it eat, where does it live, and is it common near Uvita? I can attach a photo if you want to check the identification.';
         e.currentTarget.href='https://claude.ai/new?q='+encodeURIComponent(q);
-      }}},'Ask Claude')));
+      }}},'Ask Claude')];
+    g.appendChild(h('div',{class:'btnrow'},topBtns[0],h('button',{class:'btn',type:'button',on:{click:function(){
+      var p=$('#panel'); p.textContent=''; p.appendChild(h('h2',null,'More'));
+      var col=h('div',{style:'display:flex;flex-direction:column;gap:10px'});
+      topBtns.slice(1).forEach(function(b){ col.appendChild(b); });
+      col.appendChild(h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Close'));
+      p.appendChild(col); openSheet();
+    }}},'More')));
     g.appendChild(sec('Pictures'));
     if(!pics.length) g.appendChild(h('p',{class:'note'},'No pictures yet. Tap Add pictures.'));
     var gal=h('div',{class:'gal'});
@@ -1385,15 +1410,35 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       }
       ask();
       var isCover=(coverOf(k)||{}).id===it.id;
-      var coverBtn=h('button',{class:'btn sm'+(isCover?' solid':''),type:'button',on:{click:function(){
-        if(isCover) return; covers[k]=it.id; saveCovers().then(function(){render()});
-      }}},isCover?'Cover photo':'Use as cover');
-      if(isCover) coverBtn.setAttribute('aria-pressed','true');
+      var canEdit=it.kind==='obs'&&it.o&&!it.o.sample;
+      var moreBtn=h('button',{class:'pmore',type:'button','aria-label':'More actions',on:{click:function(){
+        var p=$('#panel'); p.textContent='';
+        var col=h('div',{style:'display:flex;flex-direction:column;gap:10px'});
+        col.appendChild(h('button',{class:'btn'+(isCover?' solid':''),type:'button',on:{click:function(){
+          if(isCover){ closeSheet(); return; }
+          covers[k]=it.id; saveCovers().then(function(){ closeSheet(); render(); });
+        }}},isCover?'Cover photo \u2713':'Use as cover'));
+        col.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ editPicNote(it); }}},(it.kind==='obs'?it.o:it.x).pnote?'Edit note':'Add note'));
+        var shb=h('button',{class:'btn',type:'button'},'Share');
+        shb.addEventListener('click',function(){ shareCard(it,name,shb); closeSheet(); });
+        col.appendChild(shb);
+        if(canEdit) col.appendChild(h('button',{class:'btn',type:'button',on:{click:function(){ editSighting(it.o); }}},'Edit'));
+        col.appendChild(h('button',{class:'btn danger',type:'button',on:{click:function(){
+          p.textContent=''; p.appendChild(h('h2',null,'Remove this picture?'));
+          p.appendChild(h('div',{style:'display:flex;flex-direction:column;gap:10px'},
+            h('button',{class:'btn danger',type:'button',on:{click:function(){ closeSheet(); removePic(it,k); }}},'Yes, remove'),
+            h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Keep')));
+        }}},'Remove'));
+        col.appendChild(h('button',{class:'btn quiet',type:'button',on:{click:closeSheet}},'Close'));
+        p.appendChild(h('h2',null,fmt(it.date)));
+        p.appendChild(col); openSheet();
+      }}},'\u22ef');
       gal.appendChild(h('div',{class:'gitem'},
-        pic(it.pic,function(){ openLightbox(target,again,targets,i); }),
-        h('span',{class:'meta'},fmt(it.date)+(it.kind==='x'?' \u00b7 added by you':(it.o.place?' \u00b7 '+it.o.place.split(',')[0]:''))),
-        coverBtn,
-        act));
+        h('div',{class:'pwrap'},pic(it.pic,function(){ openLightbox(target,again,targets,i); })),
+        h('div',{class:'pmrow'},
+          h('span',{class:'meta'},fmt(it.date)+(it.kind==='x'?' \u00b7 added by you':(it.o.place?' \u00b7 '+it.o.place.split(',')[0]:''))),
+          moreBtn),
+        ((it.kind==='obs'?it.o:it.x).pnote)?h('p',{class:'note',style:'margin:0'},(it.kind==='obs'?it.o:it.x).pnote):null));
     });
     g.appendChild(gal);
     var vids=videos.filter(function(x){return x.key===k});
@@ -1402,14 +1447,7 @@ textarea.notes::placeholder{color:var(--muted); font-style:italic}
       vids.forEach(function(x){ g.appendChild(videoItem(x)); });
       g.appendChild(h('p',{class:'note'},'Videos stay on this phone. They are not part of backups or sync.'));
     }
-    g.appendChild(sec('Sightings'));
-    var sl=h('div',null);
-    all.forEach(function(o){
-      sl.appendChild(h('div',{class:'row',style:'cursor:default'},
-        h('span',{class:'grow'},h('span',{class:'meta'},fmt(o.date)+(o.place?' \u00b7 '+o.place:''))),
-        o.sample?null:h('button',{class:'btn quiet sm',type:'button',on:{click:function(){ editSighting(o); }}},'Edit')));
-    });
-    g.appendChild(sl);
+    g.appendChild(h('p',{class:'note'},''));
     g.appendChild(sec('Notes'));
     var ta=h('textarea',{class:'notes',rows:'4','aria-label':'Notes about '+name,placeholder:'Where you see it, behaviour, calls\u2026'});
     ta.value=notes[k]||'';
